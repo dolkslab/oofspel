@@ -1,6 +1,6 @@
 Material planettest : Common/MatDefs/Light/Lighting.j3md {
      MaterialParameters {
-        LightMap : Flip Materials/test.png
+        LightMap : Flip Materials/earthmap.jpg
      }
     AdditionalRenderState {
     }

@@ -16,6 +16,8 @@ import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
@@ -32,10 +34,16 @@ public class teststate1 extends AbstractAppState {
     private final Node rootNode;
     private final Node localRootNode = new Node ("Test 1");
     private AssetManager assetManager;
-    //private KeyTrigger k1 = new KeyTrigger(KeyInput.KEY_P);
     private final InputManager inputManager;
-    private float Rv = 0.0f;
-    private float Rh = 0.0f;
+    private float SunG = 4f;
+    private float v = 0;
+    private Vector3f vfg = new Vector3f();
+    private Vector3f vforbit = new Vector3f(0, 8f, 0);
+    private Vector3f vf = new Vector3f();
+    private Vector3f sf = new Vector3f(6f, 0f, 0f);
+    Quaternion pitch = new Quaternion();
+
+    
 
        
     public teststate1(SimpleApplication app){
@@ -55,71 +63,61 @@ public class teststate1 extends AbstractAppState {
    
         
       
-        Box b = new Box(1, 1, 1);
-        Geometry geomA = new Geometry("Box", b);
+        
         
 
-        Sphere sphereMesh = new Sphere(32,32, 2f);
-        Geometry sphereGeo = new Geometry("Sphere", sphereMesh);
-        sphereMesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
-        TangentBinormalGenerator.generate(sphereMesh);           // for lighting effect
-        Material sphereMat = assetManager.loadMaterial("Materials/Planet.j3m");
-        //sphereMat.setTexture("DiffuseMap", assetManager.loadTexture("Textures/Terrain/Pond/Pond.jpg"));
-        //sphereMat.setTexture("NormalMap", assetManager.loadTexture("Textures/Terrain/Pond/Pond_normal.png"));
-        sphereMat.setBoolean("UseMaterialColors",true);
-        sphereMat.setColor("Diffuse",ColorRGBA.White);
-        sphereMat.setColor("Specular",ColorRGBA.White);
-        sphereMat.setFloat("Shininess", 64f);  // [0,128]
-        sphereGeo.setMaterial(sphereMat);
-        sphereGeo.setLocalTranslation(0,2,-2); // Move it a bit
-        sphereGeo.rotate(0, 0, 0);          // Rotate it a bit
-        localRootNode.attachChild(sphereGeo);
+        Sphere SunMesh = new Sphere(32,32, 1f);
+        Geometry SunGeo = new Geometry("Sun", SunMesh);
+        SunMesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
+        TangentBinormalGenerator.generate(SunMesh);           // for lighting effect
+        Material SunMat = assetManager.loadMaterial("Materials/Sun.j3m");
+        SunMat.setBoolean("UseMaterialColors",true);
+        SunMat.setColor("Diffuse",ColorRGBA.White);
+        SunMat.setColor("Specular",ColorRGBA.White);
+        SunMat.setFloat("Shininess", 64f);  // [0,128]
+        SunGeo.setMaterial(SunMat);
+        localRootNode.attachChild(SunGeo);
 
-        DirectionalLight sun = new DirectionalLight();
-        sun.setDirection(new Vector3f(1,0,-2).normalizeLocal());
-        sun.setColor(ColorRGBA.White);
-        localRootNode.addLight(sun);
+        DirectionalLight light = new DirectionalLight();
+        light.setDirection(new Vector3f(1,0,-2).normalizeLocal());
+        light.setColor(ColorRGBA.White);
+        localRootNode.addLight(light);
 
-        //localRootNode.attachChild(geomA);
+        Sphere PlanetMesh = new Sphere(32,32, 0.5f);
+        Geometry PlanetGeo = new Geometry("Planet", PlanetMesh);
+        PlanetMesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
+        TangentBinormalGenerator.generate(SunMesh);           // for lighting effect
+        Material PlanetMat = assetManager.loadMaterial("Materials/Planet.j3m");
+        PlanetMat.setBoolean("UseMaterialColors",true);
+        PlanetMat.setColor("Diffuse",ColorRGBA.White);
+        PlanetMat.setColor("Specular",ColorRGBA.White);
+        PlanetMat.setFloat("Shininess", 64f);  // [0,128]
+        PlanetGeo.setMaterial(PlanetMat);
+        PlanetGeo.setLocalTranslation(sf);
+        localRootNode.attachChild(PlanetGeo);
+        
+        pitch.fromAngleAxis(0.25f*FastMath.PI, new Vector3f(1,0,0));
+
         
         inputManager.addMapping("Pause", new KeyTrigger(KeyInput.KEY_P));
         inputManager.addListener(actionListener, "Pause");
-        inputManager.addMapping("Ru", new KeyTrigger(KeyInput.KEY_I));
-        inputManager.addListener(actionListener, "Ru");
-        inputManager.addMapping("Rd", new KeyTrigger(KeyInput.KEY_K));
-        inputManager.addListener(actionListener, "Rd");
-        inputManager.addMapping("Rr", new KeyTrigger(KeyInput.KEY_J));
-        inputManager.addListener(actionListener, "Rr");
-        inputManager.addMapping("Rl", new KeyTrigger(KeyInput.KEY_L));
-        inputManager.addListener(actionListener, "Rl");
+        inputManager.addMapping("Test", new KeyTrigger(KeyInput.KEY_T));
+        inputManager.addListener(actionListener, "Test");
+
+
  
     }
     private final ActionListener actionListener = new ActionListener() {
        @Override
        public void onAction(String name, boolean keyPressed, float tpf) {
             if (name.equals("Pause") && !keyPressed){
-            setEnabled(!isEnabled());
+                setEnabled(!isEnabled());
+            }
+            if (name.equals("Test") && !keyPressed){
+                SunG = 1f; 
             }
 
-            if (name.equals("Ru") && keyPressed){  
-                Rv = -1;
-            }
-            else if(name.equals("Rd") && keyPressed){
-                Rv = 1;
-            }
-            else if(!keyPressed){
-                Rv = 0;
-            }
-            
-            if (name.equals("Rr") && keyPressed){  
-                Rh = -1;
-            }
-            else if(name.equals("Rl") && keyPressed){
-                Rh = 1;
-            }
-            else if(!keyPressed){
-                Rh = 0;
-            }
+
         }
     };
         
@@ -133,11 +131,20 @@ public class teststate1 extends AbstractAppState {
     
     @Override
     public void update(float tpf) {
-        Spatial sphereGeo = localRootNode.getChild("Sphere");
-        if (sphereGeo != null) { 
-            float speed = 1.0f;
-            sphereGeo.rotate(Rv*tpf, Rh*tpf, 0);
-            System.out.println(sphereGeo.getLocalRotation());
+        Spatial SunGeo = localRootNode.getChild("Sun");
+        Spatial PlanetGeo = localRootNode.getChild("Planet");
+        if (SunGeo != null && PlanetGeo != null) { 
+          //  if(PlanetGeo.getLocalTranslation().length() - 1.5 >  SunGeo.getLocalTranslation().length()){
+                PlanetGeo.setLocalTranslation(sf);
+            //}
+
+            v = v + SunG*tpf;
+            vfg = sf.normalize().mult(-v*tpf);
+            System.out.println(vfg.add(vforbit) +", "+ vfg +", "+ vforbit);
+            //vf = vfg.add(vforbit.mult(tpf));
+           // vforbit = vf.divide(tpf);
+            sf = sf.add(vfg);
+            
         }
         
     }
