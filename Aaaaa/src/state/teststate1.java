@@ -35,11 +35,10 @@ public class teststate1 extends AbstractAppState {
     private final Node localRootNode = new Node ("Test 1");
     private AssetManager assetManager;
     private final InputManager inputManager;
-    private float SunG = 4f;
-    private float v = 0;
-    private Vector3f vfg = new Vector3f();
-    private Vector3f vforbit = new Vector3f(0, 8f, 0);
-    private Vector3f vf = new Vector3f();
+    private float r;
+    private float sma = 6;
+    private float ecc = 0.1f;
+    private float theta = 0;
     private Vector3f sf = new Vector3f(6f, 0f, 0f);
     Quaternion pitch = new Quaternion();
 
@@ -103,7 +102,7 @@ public class teststate1 extends AbstractAppState {
         inputManager.addListener(actionListener, "Pause");
         inputManager.addMapping("Test", new KeyTrigger(KeyInput.KEY_T));
         inputManager.addListener(actionListener, "Test");
-
+        setEnabled(false);
 
  
     }
@@ -114,7 +113,7 @@ public class teststate1 extends AbstractAppState {
                 setEnabled(!isEnabled());
             }
             if (name.equals("Test") && !keyPressed){
-                SunG = 1f; 
+               
             }
 
 
@@ -134,18 +133,14 @@ public class teststate1 extends AbstractAppState {
         Spatial SunGeo = localRootNode.getChild("Sun");
         Spatial PlanetGeo = localRootNode.getChild("Planet");
         if (SunGeo != null && PlanetGeo != null) { 
-          //  if(PlanetGeo.getLocalTranslation().length() - 1.5 >  SunGeo.getLocalTranslation().length()){
+            if(PlanetGeo.getLocalTranslation().length() - 1.5 >  SunGeo.getLocalTranslation().length()){
                 PlanetGeo.setLocalTranslation(sf);
-            //}
-
-            v = v + SunG*tpf;
-            vfg = sf.normalize().mult(-v*tpf);
-            System.out.println(vfg.add(vforbit) +", "+ vfg +", "+ vforbit);
-            //vf = vfg.add(vforbit.mult(tpf));
-           // vforbit = vf.divide(tpf);
-            sf = sf.add(vfg);
+                r = sma*(1-FastMath.pow(sma, 2f))/(1+ecc*FastMath.cos(theta));
+                sf = FastMath.sphericalToCartesian(new Vector3f(r, theta, 0), sf);
+                theta = theta+tpf;
             
+            
+            }
         }
-        
     }
-}
+    }
