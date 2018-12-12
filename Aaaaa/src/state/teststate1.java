@@ -36,11 +36,11 @@ public class teststate1 extends AbstractAppState {
     private AssetManager assetManager;
     private final InputManager inputManager;
     private float r;
-    private float sma = 6;
-    private float ecc = 0.1f;
+    private final float sma = 6;
+    private final float ecc = 0.5f;
     private float theta = 0;
-    private Vector3f sf = new Vector3f(6f, 0f, 0f);
-    Quaternion pitch = new Quaternion();
+    private Vector3f sf = new Vector3f(9f, 0f, 0f);
+    Quaternion day = new Quaternion();
 
     
 
@@ -95,7 +95,7 @@ public class teststate1 extends AbstractAppState {
         PlanetGeo.setLocalTranslation(sf);
         localRootNode.attachChild(PlanetGeo);
         
-        pitch.fromAngleAxis(0.25f*FastMath.PI, new Vector3f(1,0,0));
+        day.fromAngleAxis(0, new Vector3f(0,1,0));
 
         
         inputManager.addMapping("Pause", new KeyTrigger(KeyInput.KEY_P));
@@ -134,11 +134,16 @@ public class teststate1 extends AbstractAppState {
         Spatial PlanetGeo = localRootNode.getChild("Planet");
         if (SunGeo != null && PlanetGeo != null) { 
             if(PlanetGeo.getLocalTranslation().length() - 1.5 >  SunGeo.getLocalTranslation().length()){
-                PlanetGeo.setLocalTranslation(sf);
-                r = sma*(1-FastMath.pow(sma, 2f))/(1+ecc*FastMath.cos(theta));
-                sf = FastMath.sphericalToCartesian(new Vector3f(r, theta, 0), sf);
+                
+                r = (sma*(1-FastMath.pow(ecc, 2f)))/(1+(ecc*FastMath.cos(theta)));
+                System.out.println(FastMath.sphericalToCartesian(new Vector3f(r, 0, theta), sf) + ", " + theta);
                 theta = theta+tpf;
-            
+                PlanetGeo.setLocalTranslation(sf.add(new Vector3f(6, 0, 0)));
+                
+                day.fromAngleAxis(tpf*FastMath.PI*2, new Vector3f(0,0,1));
+                PlanetGeo.rotate(day);
+                day.fromAngleAxis(tpf*FastMath.PI*0.1f, new Vector3f(0,0,1));
+                SunGeo.rotate(day);
             
             }
         }
