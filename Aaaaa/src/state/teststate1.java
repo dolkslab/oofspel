@@ -37,9 +37,9 @@ public class teststate1 extends AbstractAppState {
     private final InputManager inputManager;
     private float r;
     private final float sma = 6;
-    private final float ecc = 0.5f;
+    private final float ecc = 0.15f;
     private float theta = 0;
-    private Vector3f sf = new Vector3f(9f, 0f, 0f);
+    private Vector3f sf = new Vector3f((3*sma)-(2*sma*(1-FastMath.pow(ecc, 2f))), 0f, 0f);
     Quaternion day = new Quaternion();
 
     
@@ -82,7 +82,7 @@ public class teststate1 extends AbstractAppState {
         light.setColor(ColorRGBA.White);
         localRootNode.addLight(light);
 
-        Sphere PlanetMesh = new Sphere(32,32, 0.5f);
+        Sphere PlanetMesh = new Sphere(32,32, 0.1f);
         Geometry PlanetGeo = new Geometry("Planet", PlanetMesh);
         PlanetMesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
         TangentBinormalGenerator.generate(SunMesh);           // for lighting effect
@@ -133,13 +133,12 @@ public class teststate1 extends AbstractAppState {
         Spatial SunGeo = localRootNode.getChild("Sun");
         Spatial PlanetGeo = localRootNode.getChild("Planet");
         if (SunGeo != null && PlanetGeo != null) { 
-            if(PlanetGeo.getLocalTranslation().length() - 1.5 >  SunGeo.getLocalTranslation().length()){
+            if(PlanetGeo.getLocalTranslation().length() - 1.1 >  SunGeo.getLocalTranslation().length()){
                 
                 r = (sma*(1-FastMath.pow(ecc, 2f)))/(1+(ecc*FastMath.cos(theta)));
                 System.out.println(FastMath.sphericalToCartesian(new Vector3f(r, 0, theta), sf) + ", " + theta);
                 theta = theta+tpf;
-                PlanetGeo.setLocalTranslation(sf.add(new Vector3f(6, 0, 0)));
-                
+                PlanetGeo.setLocalTranslation(sf.add(new Vector3f((2*sma)-((2*sma*(1-FastMath.pow(ecc, 2f)))/(1+ecc)), 0, 0)));
                 day.fromAngleAxis(tpf*FastMath.PI*2, new Vector3f(0,0,1));
                 PlanetGeo.rotate(day);
                 day.fromAngleAxis(tpf*FastMath.PI*0.1f, new Vector3f(0,0,1));
