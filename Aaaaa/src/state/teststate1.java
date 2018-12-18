@@ -35,12 +35,19 @@ public class teststate1 extends AbstractAppState {
     private final Node localRootNode = new Node ("Test 1");
     private AssetManager assetManager;
     private final InputManager inputManager;
-    private float r;
-    private final float sma = 6;
-    private final float ecc = 0.15f;
-    private float theta = 0;
-    private Vector3f sf = new Vector3f((3*sma)-(2*sma*(1-FastMath.pow(ecc, 2f))), 0f, 0f);
-    Quaternion day = new Quaternion();
+    private final float G = 6.67408f;//*FastMath.pow(10, -11);
+    private float f;
+    private final float EarthMass = 3f;
+    private final float SunMass = 8f;
+    private float theta;
+    private Vector3f sf = new Vector3f(5f, 0f, 0f);
+    private Vector3f v = new Vector3f(0f, 0f, 0f);
+    private Vector3f gravV = new Vector3f();
+    private float vx = 0;
+    private float vy = 2;
+    private float fx;
+    private float fy;
+    private Quaternion day = new Quaternion();
 
     
 
@@ -134,11 +141,18 @@ public class teststate1 extends AbstractAppState {
         Spatial PlanetGeo = localRootNode.getChild("Planet");
         if (SunGeo != null && PlanetGeo != null) { 
             if(PlanetGeo.getLocalTranslation().length() - 1.1 >  SunGeo.getLocalTranslation().length()){
+                f = -G *((SunMass*EarthMass)/FastMath.pow(sf.distance(SunGeo.getLocalTranslation()), 2));
+                theta = sf.angleBetween(SunGeo.getLocalTranslation())-.5f*FastMath.PI;
+                fx = FastMath.cos(theta)*f;
+                fy = FastMath.sin(theta)*f;
+                vx += (fx / EarthMass) * tpf;
+                vy += (fy / EarthMass) * tpf;
                 
-                r = (sma*(1-FastMath.pow(ecc, 2f)))/(1+(ecc*FastMath.cos(theta)));
-                System.out.println(FastMath.sphericalToCartesian(new Vector3f(r, 0, theta), sf) + ", " + theta);
-                theta = theta+tpf;
-                PlanetGeo.setLocalTranslation(sf.add(new Vector3f((2*sma)-((2*sma*(1-FastMath.pow(ecc, 2f)))/(1+ecc)), 0, 0)));
+                
+                
+                sf = sf.add(vx*tpf, vy*tpf, 0);
+                System.out.println(f +" "+ theta);
+                PlanetGeo.setLocalTranslation(sf);
                 day.fromAngleAxis(tpf*FastMath.PI*2, new Vector3f(0,0,1));
                 PlanetGeo.rotate(day);
                 day.fromAngleAxis(tpf*FastMath.PI*0.1f, new Vector3f(0,0,1));
