@@ -20,11 +20,14 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.util.TangentBinormalGenerator;
+import com.jme3.math.Line;
 /**
  *
  * @author oofer
@@ -37,16 +40,18 @@ public class teststate1 extends AbstractAppState {
     private final InputManager inputManager;
     private final float G = 6.67408f;//*FastMath.pow(10, -11);
     private float f;
-    private final float EarthMass = 3f;
-    private final float SunMass = 8f;
+    private final float EarthMass = 4f;
+    private final float SunMass = 13f;
     private float theta;
     private Vector3f sf = new Vector3f(5f, 0f, 0f);
     private Vector3f v = new Vector3f(0f, 0f, 0f);
     private Vector3f gravV = new Vector3f();
     private float vx = 0;
-    private float vy = 2;
+    private float vy = 3f;
     private float fx;
     private float fy;
+    private float sx = 5;
+    private float sy;
     private Quaternion day = new Quaternion();
 
     
@@ -102,6 +107,12 @@ public class teststate1 extends AbstractAppState {
         PlanetGeo.setLocalTranslation(sf);
         localRootNode.attachChild(PlanetGeo);
         
+        
+        
+        
+        
+
+        
         day.fromAngleAxis(0, new Vector3f(0,1,0));
 
         
@@ -139,19 +150,28 @@ public class teststate1 extends AbstractAppState {
     public void update(float tpf) {
         Spatial SunGeo = localRootNode.getChild("Sun");
         Spatial PlanetGeo = localRootNode.getChild("Planet");
+        Spatial LineGeo = localRootNode.getChild("line");
+        
         if (SunGeo != null && PlanetGeo != null) { 
             if(PlanetGeo.getLocalTranslation().length() - 1.1 >  SunGeo.getLocalTranslation().length()){
-                f = -G *((SunMass*EarthMass)/FastMath.pow(sf.distance(SunGeo.getLocalTranslation()), 2));
-                theta = sf.angleBetween(SunGeo.getLocalTranslation())-.5f*FastMath.PI;
+                f = G *((SunMass*EarthMass)/FastMath.pow(PlanetGeo.getLocalTranslation().distance(SunGeo.getLocalTranslation()), 2));
+                theta = FastMath.atan2(sy, sx) - FastMath.PI;
                 fx = FastMath.cos(theta)*f;
                 fy = FastMath.sin(theta)*f;
-                vx += (fx / EarthMass) * tpf;
-                vy += (fy / EarthMass) * tpf;
+                vx = vx + ((fx / EarthMass) * 0.01f);
+                vy = vy + ((fy / EarthMass) * 0.01f);
+                sx = sx + (vx*0.01f);
+                sy = sy + (vy*0.01f);
+                sf = new Vector3f(sx, sy, 0);
                 
                 
+                System.out.println(FastMath.cos(theta) + " "+FastMath.sin(theta) +" "+ theta);
                 
-                sf = sf.add(vx*tpf, vy*tpf, 0);
-                System.out.println(f +" "+ theta);
+                if(fx >= 0){
+                   //setEnabled(false); 
+                }
+                
+                
                 PlanetGeo.setLocalTranslation(sf);
                 day.fromAngleAxis(tpf*FastMath.PI*2, new Vector3f(0,0,1));
                 PlanetGeo.rotate(day);
