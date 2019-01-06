@@ -38,22 +38,17 @@ public class teststate1 extends AbstractAppState {
     private final Node localRootNode = new Node ("Test 1");
     private AssetManager assetManager;
     private final InputManager inputManager;
-    private final float G = 6.67408f;//*FastMath.pow(10, -11);
-    private float f;
-    private final float EarthMass = 4f;
-    private final float SunMass = 13f;
-    private float theta;
-    private Vector3f sf = new Vector3f(5f, 0f, 0f);
-    private Vector3f v = new Vector3f(0f, 0f, 0f);
-    private Vector3f gravV = new Vector3f();
-    private float vx = 0;
-    private float vy = 3f;
-    private float fx;
-    private float fy;
-    private float sx = 5;
-    private float sy;
+    
+    private final Body bodies[] = new Body[3];
+    
     private Quaternion day = new Quaternion();
-
+    private float[] total_f;
+    private float total_fy;
+    private float total_fx;
+    private final float AU = 149.6f * FastMath.pow(10, 9);
+    private final float scale = 4/AU;
+    private final float timestep = 24*3600;
+    private float speed = 1f;
     
 
        
@@ -77,7 +72,7 @@ public class teststate1 extends AbstractAppState {
         
         
 
-        Sphere SunMesh = new Sphere(32,32, 1f);
+        Sphere SunMesh = new Sphere(32,32, 0.3f);
         Geometry SunGeo = new Geometry("Sun", SunMesh);
         SunMesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
         TangentBinormalGenerator.generate(SunMesh);           // for lighting effect
@@ -94,25 +89,28 @@ public class teststate1 extends AbstractAppState {
         light.setColor(ColorRGBA.White);
         localRootNode.addLight(light);
 
-        Sphere PlanetMesh = new Sphere(32,32, 0.1f);
-        Geometry PlanetGeo = new Geometry("Planet", PlanetMesh);
-        PlanetMesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
-        TangentBinormalGenerator.generate(SunMesh);           // for lighting effect
-        Material PlanetMat = assetManager.loadMaterial("Materials/Planet.j3m");
-        PlanetMat.setBoolean("UseMaterialColors",true);
-        PlanetMat.setColor("Diffuse",ColorRGBA.White);
-        PlanetMat.setColor("Specular",ColorRGBA.White);
-        PlanetMat.setFloat("Shininess", 64f);  // [0,128]
-        PlanetGeo.setMaterial(PlanetMat);
-        PlanetGeo.setLocalTranslation(sf);
-        localRootNode.attachChild(PlanetGeo);
+        Sphere EarthMesh = new Sphere(32,32, 0.1f);
+        Geometry EarthGeo = new Geometry("Earth", EarthMesh);
+        EarthMesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
+        TangentBinormalGenerator.generate(EarthMesh);           // for lighting effect
+        Material EarthMat = assetManager.loadMaterial("Materials/Planet.j3m");
+        EarthMat.setBoolean("UseMaterialColors",true);
+        EarthMat.setColor("Diffuse",ColorRGBA.White);
+        EarthMat.setColor("Specular",ColorRGBA.White);
+        EarthMat.setFloat("Shininess", 64f);  // [0,128]
+        EarthGeo.setMaterial(EarthMat);
+        localRootNode.attachChild(EarthGeo);
         
-        
+        Sphere VenusMesh = new Sphere(32, 32, 0.05f);
+        Geometry VenusGeo = new Geometry("Venus", VenusMesh);
+        VenusMesh.setTextureMode(Sphere.TextureMode.Projected);
+        TangentBinormalGenerator.generate(VenusMesh);
+        VenusGeo.setMaterial(SunMat);
+        localRootNode.attachChild(VenusGeo);
         
         
         
 
-        
         day.fromAngleAxis(0, new Vector3f(0,1,0));
 
         
@@ -120,9 +118,15 @@ public class teststate1 extends AbstractAppState {
         inputManager.addListener(actionListener, "Pause");
         inputManager.addMapping("Test", new KeyTrigger(KeyInput.KEY_T));
         inputManager.addListener(actionListener, "Test");
-        setEnabled(false);
-
- 
+        inputManager.addMapping("speedup", new KeyTrigger(KeyInput.KEY_I));
+        inputManager.addListener(actionListener, "speedup");
+        inputManager.addMapping("slowdown", new KeyTrigger(KeyInput.KEY_K));
+        inputManager.addListener(actionListener, "slowdown");
+        
+        bodies[0] = new Body ("Sun", (1.98892f * FastMath.pow(10, 30)), 0f, 0f);
+        bodies[1] = new Body ("Venus", (4.8685f * FastMath.pow(10, 24)), (-0.723f*AU) ,(-35.02f*1000f));
+	bodies[2] = new Body ("Earth", (5.9742f * FastMath.pow(10, 24)), AU, (29.783f * 1000f));
+	setEnabled(false);
     }
     private final ActionListener actionListener = new ActionListener() {
        @Override
@@ -131,9 +135,16 @@ public class teststate1 extends AbstractAppState {
                 setEnabled(!isEnabled());
             }
             if (name.equals("Test") && !keyPressed){
-               
-            }
 
+            }
+            if (name.equals("speedup") && !keyPressed){
+                speed += 0.2;
+            }
+            if (name.equals("slowdown") && !keyPressed){
+                if(speed>0.2){
+                speed -= 0.2;
+                }
+            }
 
         }
     };
@@ -148,37 +159,35 @@ public class teststate1 extends AbstractAppState {
     
     @Override
     public void update(float tpf) {
-        Spatial SunGeo = localRootNode.getChild("Sun");
-        Spatial PlanetGeo = localRootNode.getChild("Planet");
-        Spatial LineGeo = localRootNode.getChild("line");
-        
-        if (SunGeo != null && PlanetGeo != null) { 
-            if(PlanetGeo.getLocalTranslation().length() - 1.1 >  SunGeo.getLocalTranslation().length()){
-                f = G *((SunMass*EarthMass)/FastMath.pow(PlanetGeo.getLocalTranslation().distance(SunGeo.getLocalTranslation()), 2));
-                theta = FastMath.atan2(sy, sx) - FastMath.PI;
-                fx = FastMath.cos(theta)*f;
-                fy = FastMath.sin(theta)*f;
-                vx = vx + ((fx / EarthMass) * 0.01f);
-                vy = vy + ((fy / EarthMass) * 0.01f);
-                sx = sx + (vx*0.01f);
-                sy = sy + (vy*0.01f);
-                sf = new Vector3f(sx, sy, 0);
-                
-                
-                System.out.println(FastMath.cos(theta) + " "+FastMath.sin(theta) +" "+ theta);
-                
-                if(fx >= 0){
-                   //setEnabled(false); 
-                }
-                
-                
-                PlanetGeo.setLocalTranslation(sf);
-                day.fromAngleAxis(tpf*FastMath.PI*2, new Vector3f(0,0,1));
-                PlanetGeo.rotate(day);
-                day.fromAngleAxis(tpf*FastMath.PI*0.1f, new Vector3f(0,0,1));
-                SunGeo.rotate(day);
             
-            }
-        }
+            //deze for loop loopt door alle elementen in de lijst "bodies".
+            for(Body self:bodies){
+                
+                total_fy = total_fx = 0;
+                    for(Body other:bodies){
+                        
+                        // Om de totale kracht te berekenen, moeten we voor elk lichaam de attractie
+                        // met elke ander lichaam berekenen, deze loop loopt doet dat.
+                        if(!other.name.equals(self.name)){
+                            
+                            //deze functie berekent de kracht tussen 2 lichamen.
+                            total_f = Calculate.Attraction(self, other);
+                            System.out.println(total_f[0] + " " + total_f[1]+ " " +  self.name + " " + other.name);
+                            total_fx += total_f[0];
+                            total_fy += total_f[1];
+                            
+                    }
+                }
+                //bereken snelheid(f=ma).
+                self.vx = self.vx + (total_fx/self.mass)*timestep*speed;
+                self.vy = self.vy + (total_fy/self.mass)*timestep*speed;
+                    
+                //berken plaats met snelheid
+                self.px = self.px + (self.vx * timestep*speed);
+                self.py = self.py + (self.vy * timestep*speed);
+                Spatial MoveGeo = localRootNode.getChild(self.name);
+                MoveGeo.setLocalTranslation(new Vector3f(self.px*scale, self.py*scale, 0));
+                
+            } 
     }
-    }
+}
