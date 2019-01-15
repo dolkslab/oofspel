@@ -20,14 +20,18 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.util.TangentBinormalGenerator;
-import com.jme3.math.Line;
+import com.jme3.niftygui.NiftyJmeDisplay;
+import de.lessvoid.nifty.Nifty;
+import java.util.HashMap;
+import java.util.Map;
+
+
+
 /**
  *
  * @author oofer
@@ -60,18 +64,13 @@ public class teststate1 extends AbstractAppState {
     }
     
     
+    
+    
     @Override
     public void initialize(AppStateManager stateManager, Application app) {
         super.initialize(stateManager, app);
         
         rootNode.attachChild(localRootNode);
-    
-   
-        
-      
-        
-        
-
         Sphere SunMesh = new Sphere(32,32, 0.3f);
         Geometry SunGeo = new Geometry("Sun", SunMesh);
         SunMesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
@@ -188,6 +187,6 @@ public class teststate1 extends AbstractAppState {
                 Spatial MoveGeo = localRootNode.getChild(self.name);
                 MoveGeo.setLocalTranslation(new Vector3f(self.px*scale, self.py*scale, 0));
                 
-            } 
+        } 
     }
 }
