@@ -11,8 +11,11 @@ import com.jme3.app.state.AppStateManager;
 import com.jme3.asset.AssetManager;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
+import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
@@ -22,16 +25,8 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.util.TangentBinormalGenerator;
-import com.jme3.niftygui.NiftyJmeDisplay;
-import de.lessvoid.nifty.Nifty;
-import java.util.HashMap;
-import java.util.Map;
-
-
-
 /**
  *
  * @author oofer
@@ -43,7 +38,7 @@ public class teststate1 extends AbstractAppState {
     private AssetManager assetManager;
     private final InputManager inputManager;
     
-    private final Body bodies[] = new Body[3];
+    private final Body bodies[] = new Body[4];
     
     private Quaternion day = new Quaternion();
     private float[] total_f;
@@ -64,13 +59,18 @@ public class teststate1 extends AbstractAppState {
     }
     
     
-    
-    
     @Override
     public void initialize(AppStateManager stateManager, Application app) {
         super.initialize(stateManager, app);
         
         rootNode.attachChild(localRootNode);
+    
+   
+        
+      
+        
+        
+
         Sphere SunMesh = new Sphere(32,32, 0.3f);
         Geometry SunGeo = new Geometry("Sun", SunMesh);
         SunMesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
@@ -107,10 +107,13 @@ public class teststate1 extends AbstractAppState {
         VenusGeo.setMaterial(SunMat);
         localRootNode.attachChild(VenusGeo);
         
+        Sphere MarsMesh = new Sphere(32, 32, 0.04f);
+        Geometry MarsGeo = new Geometry("Mars", MarsMesh);
+        MarsMesh.setTextureMode(Sphere.TextureMode.Projected);
+        TangentBinormalGenerator.generate(MarsMesh);
+        MarsGeo.setMaterial(SunMat);
+        localRootNode.attachChild(MarsGeo);
         
-        
-
-        day.fromAngleAxis(0, new Vector3f(0,1,0));
 
         
         inputManager.addMapping("Pause", new KeyTrigger(KeyInput.KEY_P));
@@ -121,10 +124,16 @@ public class teststate1 extends AbstractAppState {
         inputManager.addListener(actionListener, "speedup");
         inputManager.addMapping("slowdown", new KeyTrigger(KeyInput.KEY_K));
         inputManager.addListener(actionListener, "slowdown");
+        inputManager.addMapping("mouseMove", new MouseAxisTrigger(MouseInput.AXIS_X, true), 
+                                             new MouseAxisTrigger(MouseInput.AXIS_X, false), 
+                                             new MouseAxisTrigger(MouseInput.AXIS_Y, true), 
+                                             new MouseAxisTrigger(MouseInput.AXIS_Y, false));
+        inputManager.addListener(analogListener, "mouseMove");
         
-        bodies[0] = new Body ("Sun", (1.98892f * FastMath.pow(10, 30)), 0f, 0f);
-        bodies[1] = new Body ("Venus", (4.8685f * FastMath.pow(10, 24)), (-0.723f*AU) ,(-35.02f*1000f));
-	bodies[2] = new Body ("Earth", (5.9742f * FastMath.pow(10, 24)), AU, (29.783f * 1000f));
+        bodies[0] = new Body ("Sun", (1.98892f * FastMath.pow(10, 30)), 0f, 0f, 25.449f);
+        bodies[1] = new Body ("Venus", (4.8685f * FastMath.pow(10, 24)), (0.723f*AU) ,(35.02f*1000f), 116.750f);
+	bodies[2] = new Body ("Earth", (5.9742f * FastMath.pow(10, 24)), AU, (29.783f * 1000f), 1f);
+        bodies[3] = new Body ("Mars", (0.64171f * FastMath.pow(10, 24)), (1.524f*AU) ,(24.07f*1000f), 1.027f);
 	setEnabled(false);
     }
     private final ActionListener actionListener = new ActionListener() {
@@ -134,7 +143,12 @@ public class teststate1 extends AbstractAppState {
                 setEnabled(!isEnabled());
             }
             if (name.equals("Test") && !keyPressed){
-
+                setEnabled(false);
+                bodies[0] = new Body ("Sun", (1.98892f * FastMath.pow(10, 30)), 0f, 0f, 25.449f);
+                bodies[1] = new Body ("Venus", (4.8685f * FastMath.pow(10, 24)), (0.723f*AU) ,(35.02f*1000f), 116.750f);
+                bodies[2] = new Body ("Earth", (5.9742f * FastMath.pow(10, 24)), AU, (29.783f * 1000f), 1f);
+                bodies[3] = new Body ("Mars", (0.64171f * FastMath.pow(10, 24)), (1.524f*AU) ,(24.07f*1000f), 1.027f);
+                setEnabled(true);
             }
             if (name.equals("speedup") && !keyPressed){
                 speed += 0.2;
@@ -147,7 +161,13 @@ public class teststate1 extends AbstractAppState {
 
         }
     };
-        
+    private AnalogListener analogListener = new AnalogListener() {
+        public void onAnalog(String name, float keyPressed, float tpf) {
+            if(name.equals("mouseMove")){
+                System.out.println(inputManager.getCursorPosition());
+            }
+        }
+    };   
     
     @Override
     public void cleanup(){
@@ -171,7 +191,7 @@ public class teststate1 extends AbstractAppState {
                             
                             //deze functie berekent de kracht tussen 2 lichamen.
                             total_f = Calculate.Attraction(self, other);
-                            System.out.println(total_f[0] + " " + total_f[1]+ " " +  self.name + " " + other.name);
+                            //System.out.println(total_f[0] + " " + total_f[1]+ " " +  self.name + " " + other.name);
                             total_fx += total_f[0];
                             total_fy += total_f[1];
                             
@@ -186,7 +206,8 @@ public class teststate1 extends AbstractAppState {
                 self.py = self.py + (self.vy * timestep*speed);
                 Spatial MoveGeo = localRootNode.getChild(self.name);
                 MoveGeo.setLocalTranslation(new Vector3f(self.px*scale, self.py*scale, 0));
-                
-        } 
+                day.fromAngleAxis(FastMath.PI*2*speed*(timestep/24*3600)*self.day, new Vector3f(0,0,1));
+                MoveGeo.rotate(day);
+           } 
     }
 }
