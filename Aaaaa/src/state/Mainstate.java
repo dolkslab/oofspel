@@ -23,11 +23,11 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
-import com.jme3.math.Vector2f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Sphere;
+import com.jme3.texture.Texture;
 import com.jme3.util.TangentBinormalGenerator;
 /**
  *
@@ -50,6 +50,7 @@ public class Mainstate extends AbstractAppState {
     private final float scale = 4/AU;
     private final float timestep = 24*3600;
     private float speed = 1f;
+    
     
     private final Interface app;
         
@@ -119,6 +120,18 @@ public class Mainstate extends AbstractAppState {
         MarsGeo.setMaterial(SunMat);
         localRootNode.attachChild(MarsGeo);
         
+        Sphere TestMesh = new Sphere(32, 32, 0.1f);
+        Geometry TestGeo = new Geometry("Test", TestMesh);
+        TestMesh.setTextureMode(Sphere.TextureMode.Projected);
+        TangentBinormalGenerator.generate(TestMesh);
+        Material TestMat = new Material(assetManager,
+        "Common/MatDefs/Misc/Unshaded.j3md");
+        Texture TestTex = assetManager.loadTexture(
+        "Interface/Logo/Monkey.jpg");
+        TestMat.setTexture("ColorMap", TestTex);
+        TestGeo.setMaterial(TestMat);
+        localRootNode.attachChild(TestGeo);
+        
 
         
         inputManager.addMapping("Pause", new KeyTrigger(KeyInput.KEY_P));
@@ -134,8 +147,7 @@ public class Mainstate extends AbstractAppState {
                                              new MouseAxisTrigger(MouseInput.AXIS_Y, true), 
                                              new MouseAxisTrigger(MouseInput.AXIS_Y, false));
         inputManager.addListener(analogListener, "mouseMove");
-        inputManager.addMapping("camMove"   , new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
-        inputManager.addListener(camMove, "camMove");
+        
      
         
         bodies[0] = new Body ("Sun", (1.98892f * FastMath.pow(10, 30)), 0f, 0f, 25.449f);
@@ -170,20 +182,7 @@ public class Mainstate extends AbstractAppState {
         }
     };
     
-    private final ActionListener camMove = new ActionListener(){
-        @Override
-        public void onAction(String name, boolean keyPressed, float tpf){
-            if(keyPressed){
-                app.camFly(true);
-                //inputManager.setCursorVisible(false);
-                
-            }
-            else{
-                app.camFly(false);
-                inputManager.setCursorVisible(true);
-            }
-        }
-    };
+    
     
     
     
@@ -240,6 +239,10 @@ public class Mainstate extends AbstractAppState {
                 MoveGeo.setLocalTranslation(new Vector3f(self.px*scale, self.py*scale, 0));
                 day.fromAngleAxis(FastMath.PI*2*speed*(timestep/24*3600)*self.day, new Vector3f(0,0,1));
                 MoveGeo.rotate(day);
+                
+                if(app.camEnabled)
+                app.updateCamPos();
+                
            } 
     }
 }
