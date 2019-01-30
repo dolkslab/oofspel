@@ -142,11 +142,8 @@ public class Mainstate extends AbstractAppState {
         inputManager.addListener(actionListener, "speedup");
         inputManager.addMapping("slowdown", new KeyTrigger(KeyInput.KEY_K));
         inputManager.addListener(actionListener, "slowdown");
-        inputManager.addMapping("mouseMove", new MouseAxisTrigger(MouseInput.AXIS_X, true), 
-                                             new MouseAxisTrigger(MouseInput.AXIS_X, false), 
-                                             new MouseAxisTrigger(MouseInput.AXIS_Y, true), 
-                                             new MouseAxisTrigger(MouseInput.AXIS_Y, false));
-        inputManager.addListener(analogListener, "mouseMove");
+        
+   
         
      
         
@@ -186,14 +183,7 @@ public class Mainstate extends AbstractAppState {
     
     
     
-    private final AnalogListener analogListener = new AnalogListener() {
-        @Override
-        public void onAnalog(String name, float keyPressed, float tpf) {
-            if(name.equals("mouseMove")){
-               // System.out.println(inputManager.getCursorPosition());
-            }
-        }
-    };
+    ;
       
     
     @Override
@@ -239,9 +229,9 @@ public class Mainstate extends AbstractAppState {
                 MoveGeo.setLocalTranslation(new Vector3f(self.px*scale, self.py*scale, 0));
                 day.fromAngleAxis(FastMath.PI*2*speed*(timestep/24*3600)*self.day, new Vector3f(0,0,1));
                 MoveGeo.rotate(day);
-                
                 if(app.camEnabled)
-                app.updateCamPos();
+                    app.updateCamPos(); 
+                
                 
            } 
     }
