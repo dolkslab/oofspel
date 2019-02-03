@@ -1,0 +1,10 @@
+Material My Material : Common/MatDefs/Light/Lighting.j3md {
+     MaterialParameters {
+        LightMap : Materials/suntexture.jpg
+        GlowMap : Materials/suntexture.jpg
+        AlphaDiscardThreshold : 0.0
+     }
+    AdditionalRenderState {
+        Blend Color
+    }
+}
