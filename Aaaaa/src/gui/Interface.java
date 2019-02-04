@@ -20,12 +20,11 @@ import state.Mainstate;
 public class Interface extends SimpleApplication {
     
     private Nifty nifty;
-    private float angX = 0, angY=0, r=8, lastAngX=0.5f*FastMath.PI, lastAngY=0;
+    private float azimuth = FastMath.HALF_PI, pitch=0, r=8, mouseX, mouseY;
     private int camDir = 1;
     public Vector3f camcoord = new Vector3f();
     public boolean camEnabled;
-    public Vector2f lastMousePos = new Vector2f(0, 0);
-    public boolean flip;
+    public Vector2f mousePos, lastMousePos = new Vector2f(0, 0);
     
 
     @Override
@@ -72,8 +71,7 @@ public class Interface extends SimpleApplication {
             else{
                 inputManager.setCursorVisible(true);
                 camEnabled=false;
-                lastAngX = angX;
-                lastAngY = angY;
+                
             }
         }
     };
@@ -108,30 +106,25 @@ public class Interface extends SimpleApplication {
     
     public Vector3f updateCamPos(){
         
-        angY = lastAngY -((inputManager.getCursorPosition().y-lastMousePos.y)/100);
+        mousePos=inputManager.getCursorPosition();
         
+        azimuth += (mousePos.x-lastMousePos.x)/100;
+        pitch -= (mousePos.y-lastMousePos.y)/100;
         
-        if(angY > FastMath.PI)
-            angY -= 2*FastMath.PI;
-        
-        else if(angY < -FastMath.PI)
-            angY+= 2*FastMath.PI;
-        
-        if(angY > 0.5*FastMath.PI || angY < -0.5*FastMath.PI){
-            camDir = -1;
-            flip = true;
+        if(pitch > 0.5*FastMath.PI){
+            pitch = FastMath.HALF_PI-0.00001f;
+        }
+        else if (pitch < -0.5*FastMath.PI){
+            pitch = -FastMath.HALF_PI+0.00001f;
             
         }
-        else {
-            camDir = 1;
-            if(flip){
-                lastAngX = angX;
-                flip = false;
-            }
-        }
-        angX = lastAngX -((inputManager.getCursorPosition().x-lastMousePos.x)/100);
         
-        FastMath.sphericalToCartesian(new Vector3f(r, angX*camDir*-1 ,angY), camcoord);
+
+        
+        FastMath.sphericalToCartesian(new Vector3f(r, azimuth ,pitch), camcoord);
+        System.out.println(camcoord); 
+        lastMousePos=new Vector2f(mousePos.getX(), mousePos.getY());
+        
         return camcoord;
     }
     
@@ -139,7 +132,7 @@ public class Interface extends SimpleApplication {
         
         
         cam.setLocation(camcoord.add(rootNode.getChild(target).getLocalTranslation()));
-        cam.lookAt(rootNode.getChild(target).getLocalTranslation(), new Vector3f(0, camDir ,0));
+        cam.lookAt(rootNode.getChild(target).getLocalTranslation(), new Vector3f(0, 1 ,0));
 
     }
     

@@ -231,7 +231,7 @@ public class Mainstate extends AbstractAppState {
                 self.px = self.px + (self.vx * timestep*speed);
                 self.py = self.py + (self.vy * timestep*speed);
                 Spatial MoveGeo = localRootNode.getChild(self.name);
-                //MoveGeo.setLocalTranslation(new Vector3f(self.px*scale, self.py*scale, 0));
+                MoveGeo.setLocalTranslation(new Vector3f(self.px*scale, 0, self.py*scale));
                 day.fromAngleAxis(FastMath.PI*2*speed*(timestep/24*3600)*self.day, new Vector3f(0,0,1));
                 MoveGeo.rotate(day);
                 if(app.camEnabled)
