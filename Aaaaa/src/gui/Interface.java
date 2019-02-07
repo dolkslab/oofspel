@@ -112,12 +112,10 @@ public class Interface extends SimpleApplication {
         @Override
         public void onAnalog(String name, float value, float tpf) {
             if(name.equals("wheelUp")){
-                r += value*(camCoord.distance(targetCoord)-1)*0.05;
-                updateCamDistance();
+                updateCamDistance(value);
             }
             else if(name.equals("wheelDown")){
-                r -= value*(camCoord.distance(targetCoord)-1)*0.05;
-                updateCamDistance();
+                updateCamDistance(-value);
                 
             }
         }
@@ -133,7 +131,8 @@ public class Interface extends SimpleApplication {
         nifty.gotoScreen("select");
     }
     
-    public Vector3f updateCamDistance(){
+    public Vector3f updateCamDistance(float zoom){
+        r+=zoom*(camCoord.distance(targetCoord)-1)*0.05;
         FastMath.cartesianToSpherical(camCoord, new Vector3f(r, azimuth, pitch));
         FastMath.sphericalToCartesian(new Vector3f(r, azimuth, pitch), camCoord);
         return camCoord;
