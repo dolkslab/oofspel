@@ -18,6 +18,7 @@ import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
@@ -30,6 +31,7 @@ import com.jme3.util.TangentBinormalGenerator;
  *
  * @author oofer
  */
+
 public class Mainstate extends AbstractAppState {
 
     private final Node rootNode;
@@ -37,14 +39,15 @@ public class Mainstate extends AbstractAppState {
     private AssetManager assetManager;
     private final InputManager inputManager;
     
-    private final Body bodies[] = new Body[4];
+    
     
     private Quaternion day = new Quaternion();
+    public static Body bodies[] = new Body[4];
     private float[] total_f;
     private float total_fy;
     private float total_fx;
-    private final float AU = 149.6f * FastMath.pow(10, 9);
-    private final float scale = 4/AU;
+    public static final float AU = 149.6f * FastMath.pow(10, 9);
+    public static final float scale = 4/AU;
     private final float timestep = 24*3600;
     private float speed = 1f;
     
@@ -122,17 +125,7 @@ public class Mainstate extends AbstractAppState {
         MarsGeo.setMaterial(SunMat);
         localRootNode.attachChild(MarsGeo);
         
-        Sphere TestMesh = new Sphere(32, 32, 0.1f);
-        Geometry TestGeo = new Geometry("Test", TestMesh);
-        TestMesh.setTextureMode(Sphere.TextureMode.Projected);
-        TangentBinormalGenerator.generate(TestMesh);
-        Material TestMat = new Material(assetManager,
-        "Common/MatDefs/Misc/Unshaded.j3md");
-        Texture TestTex = assetManager.loadTexture(
-        "Interface/Logo/Monkey.jpg");
-        TestMat.setTexture("ColorMap", TestTex);
-        TestGeo.setMaterial(TestMat);
-        localRootNode.attachChild(TestGeo);
+        
         
 
         
@@ -147,28 +140,30 @@ public class Mainstate extends AbstractAppState {
         
    
         
-     
         
+        initBodies();
+        
+	setEnabled(false);
+    }
+    
+    public void initBodies(){
         bodies[0] = new Body ("Sun", (1.98892f * FastMath.pow(10, 30)), 0f, 0f, 0f); //25.449f);
         bodies[1] = new Body ("Venus", (4.8685f * FastMath.pow(10, 24)), (0.723f*AU) ,(35.02f*1000f), 116.750f);
 	bodies[2] = new Body ("Earth", (5.9742f * FastMath.pow(10, 24)), AU, (29.783f * 1000f), 1f);
         bodies[3] = new Body ("Mars", (0.64171f * FastMath.pow(10, 24)), (1.524f*AU) ,(24.07f*1000f), 1.027f);
-        
-	setEnabled(false);
     }
+    
     private final ActionListener actionListener = new ActionListener() {
        @Override
        public void onAction(String name, boolean keyPressed, float tpf) {
             if (name.equals("Pause") && !keyPressed){
                 setEnabled(!isEnabled());
+                app.lastMousePos=new Vector2f(inputManager.getCursorPosition().getX(), inputManager.getCursorPosition().getY());
                 app.updateCamPos();
             }
             if (name.equals("Test") && !keyPressed){
                 setEnabled(false);
-                bodies[0] = new Body ("Sun", (1.98892f * FastMath.pow(10, 30)), 0f, 0f,0f); //25.449f);
-                bodies[1] = new Body ("Venus", (4.8685f * FastMath.pow(10, 24)), (0.723f*AU) ,(35.02f*1000f), 116.750f);
-                bodies[2] = new Body ("Earth", (5.9742f * FastMath.pow(10, 24)), AU, (29.783f * 1000f), 1f);
-                bodies[3] = new Body ("Mars", (0.64171f * FastMath.pow(10, 24)), (1.524f*AU) ,(24.07f*1000f), 1.027f);
+                initBodies();
                 
                 setEnabled(true);
             }
@@ -234,9 +229,10 @@ public class Mainstate extends AbstractAppState {
                 MoveGeo.setLocalTranslation(new Vector3f(self.px*scale, 0, self.py*scale));
                 day.fromAngleAxis(FastMath.PI*2*speed*(timestep/24*3600)*self.day, new Vector3f(0,0,1));
                 MoveGeo.rotate(day);
+                
                 if(app.camEnabled)
                     app.updateCamPos(); 
-                app.updateCam("Sun");
+                app.updateCam();
                 
                 
            } 

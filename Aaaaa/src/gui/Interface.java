@@ -1,9 +1,11 @@
 package gui;
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
+import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.math.FastMath;
@@ -16,15 +18,20 @@ import com.jme3.post.filters.BloomFilter;
 import de.lessvoid.nifty.Nifty;
 
 import state.Mainstate;
+import state.Body;
 
 public class Interface extends SimpleApplication {
     
     private Nifty nifty;
     private float azimuth = FastMath.HALF_PI, pitch=0, r=8, mouseX, mouseY;
     private int camDir = 1;
-    public Vector3f camcoord = new Vector3f();
-    public boolean camEnabled;
+    public Vector3f camCoord = new Vector3f();
+    public boolean camEnabled = false;
     public Vector2f mousePos, lastMousePos = new Vector2f(0, 0);
+    public Vector3f targetCoord = new Vector3f(0, 0, 0);
+    private float nearestToTarget;
+    private Body selectedTarget = Mainstate.bodies[0];
+    
     
 
     @Override
@@ -42,7 +49,9 @@ public class Interface extends SimpleApplication {
         stateManager.attach(new Mainstate(this));
         flyCam.setEnabled(false);
         inputManager.addMapping("camMove" , new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
-        inputManager.addListener(camMove, "camMove"); 
+        inputManager.addListener(RMB, "camMove"); 
+        inputManager.addMapping("LMB", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+        inputManager.addListener(LMB, "LMB");
         
         FilterPostProcessor fpp=new FilterPostProcessor(assetManager);
         BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
@@ -56,19 +65,41 @@ public class Interface extends SimpleApplication {
         inputManager.getCursorPosition();
         
     }
-
-    
-    private final ActionListener camMove = new ActionListener(){
+    private final ActionListener LMB = new ActionListener(){
         @Override
         public void onAction(String name, boolean keyPressed, float tpf){
             if(keyPressed){
-                lastMousePos= new Vector2f(inputManager.getCursorPosition().getX(), inputManager.getCursorPosition().getY());
-                camEnabled=true;
+                nearestToTarget=3000;
                 
- 
-                
+                for(Body body:Mainstate.bodies){
+                    Vector2f screenPos = new Vector2f(cam.getScreenCoordinates(new Vector3f(body.px*Mainstate.scale, 0, body.py*Mainstate.scale)).x,
+                                                      cam.getScreenCoordinates(new Vector3f(body.px*Mainstate.scale, 0, body.py*Mainstate.scale)).y );
+                    float mouseDistance = screenPos.distance(mousePos);
+                    
+                    if(mouseDistance < nearestToTarget && mouseDistance < 50){
+                        selectedTarget=body;
+                        nearestToTarget=mouseDistance;
+                    } 
+                    
+                }
+                if(nearestToTarget != 3000){
+                targetCoord=rootNode.getChild(selectedTarget.name).getLocalTranslation();
+                System.out.println(selectedTarget.name);
+                updateCam();
+                }
             }
-            else{
+        }
+        };
+    
+    
+    private final ActionListener RMB = new ActionListener(){
+        @Override
+        public void onAction(String name, boolean keyPressed, float tpf){
+            if(keyPressed){
+                lastMousePos=new Vector2f(inputManager.getCursorPosition().getX(), inputManager.getCursorPosition().getY());
+                camEnabled=true;     
+            }
+            else {
                 inputManager.setCursorVisible(true);
                 camEnabled=false;
                 
@@ -81,16 +112,14 @@ public class Interface extends SimpleApplication {
         @Override
         public void onAnalog(String name, float value, float tpf) {
             if(name.equals("wheelUp")){
-                r += value*0.5;
-                camEnabled=true;
+                r += value*(camCoord.distance(targetCoord)-1)*0.05;
+                updateCamDistance();
             }
             else if(name.equals("wheelDown")){
-                r -= value*0.5;
-                camEnabled=true;
-            }
-            else
-                camEnabled=false;
+                r -= value*(camCoord.distance(targetCoord)-1)*0.05;
+                updateCamDistance();
                 
+            }
         }
     };
     
@@ -104,6 +133,12 @@ public class Interface extends SimpleApplication {
         nifty.gotoScreen("select");
     }
     
+    public Vector3f updateCamDistance(){
+        FastMath.cartesianToSpherical(camCoord, new Vector3f(r, azimuth, pitch));
+        FastMath.sphericalToCartesian(new Vector3f(r, azimuth, pitch), camCoord);
+        return camCoord;
+    }
+    
     public Vector3f updateCamPos(){
         
         mousePos=inputManager.getCursorPosition();
@@ -111,28 +146,25 @@ public class Interface extends SimpleApplication {
         azimuth += (mousePos.x-lastMousePos.x)/100;
         pitch -= (mousePos.y-lastMousePos.y)/100;
         
-        if(pitch > 0.5*FastMath.PI){
+        if(pitch > FastMath.HALF_PI){
             pitch = FastMath.HALF_PI-0.00001f;
         }
-        else if (pitch < -0.5*FastMath.PI){
+        else if(pitch < -1*FastMath.HALF_PI){
             pitch = -FastMath.HALF_PI+0.00001f;
-            
         }
         
-
-        
-        FastMath.sphericalToCartesian(new Vector3f(r, azimuth ,pitch), camcoord);
-        System.out.println(camcoord); 
+        FastMath.sphericalToCartesian(new Vector3f(r, azimuth ,pitch), camCoord);
+       
         lastMousePos=new Vector2f(mousePos.getX(), mousePos.getY());
         
-        return camcoord;
+        return camCoord;
     }
     
-    public void updateCam(String target){
+    public void updateCam(){
         
         
-        cam.setLocation(camcoord.add(rootNode.getChild(target).getLocalTranslation()));
-        cam.lookAt(rootNode.getChild(target).getLocalTranslation(), new Vector3f(0, 1 ,0));
+        cam.setLocation(camCoord.add(targetCoord));
+        cam.lookAt(targetCoord, new Vector3f(0, 1 ,0));
 
     }
     
