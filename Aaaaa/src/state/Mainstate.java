@@ -151,6 +151,10 @@ public class Mainstate extends AbstractAppState {
         bodies[1] = new Body ("Venus", (4.8685f * FastMath.pow(10, 24)), (0.723f*AU) ,(35.02f*1000f), 116.750f);
 	bodies[2] = new Body ("Earth", (5.9742f * FastMath.pow(10, 24)), AU, (29.783f * 1000f), 1f);
         bodies[3] = new Body ("Mars", (0.64171f * FastMath.pow(10, 24)), (1.524f*AU) ,(24.07f*1000f), 1.027f);
+        for(Body body:bodies){
+            Spatial MoveGeo = localRootNode.getChild(body.name);
+                MoveGeo.setLocalTranslation(new Vector3f(body.px*scale, 0, body.py*scale));
+        }
     }
     
     private final ActionListener actionListener = new ActionListener() {
@@ -227,7 +231,7 @@ public class Mainstate extends AbstractAppState {
                 self.py = self.py + (self.vy * timestep*speed);
                 Spatial MoveGeo = localRootNode.getChild(self.name);
                 MoveGeo.setLocalTranslation(new Vector3f(self.px*scale, 0, self.py*scale));
-                day.fromAngleAxis(FastMath.PI*2*speed*(timestep/24*3600)*self.day, new Vector3f(0,0,1));
+                day.fromAngleAxis(FastMath.PI*2*speed*(timestep/24*3600)*self.day, new Vector3f(0,1,0));
                 MoveGeo.rotate(day);
                 
                 if(app.camEnabled)

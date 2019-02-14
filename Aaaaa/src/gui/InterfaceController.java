@@ -18,15 +18,18 @@ public class InterfaceController implements ScreenController {
     public InterfaceController(Interface app) {
         this.app = app;
     }
-
+    
+    @Override
     public void bind(Nifty nifty, Screen screen) {
-        System.out.println("oof");
+        
     }
 
     @NiftyEventSubscriber(id = "sliderMass")
     public void onSliderChanged(final String id, final SliderChangedEvent event){
-        System.out.println(event.getValue());
+        app.selectedTarget.mass=app.selectedTarget.mass*event.getValue();
+        System.out.println(app.selectedTarget.mass);
     }
+    
     
     @NiftyEventSubscriber(id = "hideButton")
     public void onHideButtonClicked(final String id, final ButtonClickedEvent event) {
@@ -38,6 +41,10 @@ public class InterfaceController implements ScreenController {
     public void onEditButtonClicked(final String id, final ButtonClickedEvent event) {
         app.edit();
 
+    }
+    
+    public void testClick(){
+        System.out.println("you clicked here");
     }
     
     @Override

@@ -30,7 +30,7 @@ public class Interface extends SimpleApplication {
     public Vector2f mousePos, lastMousePos = new Vector2f(0, 0);
     public Vector3f targetCoord = new Vector3f(0, 0, 0);
     private float nearestToTarget;
-    private Body selectedTarget = Mainstate.bodies[0];
+    public Body selectedTarget = Mainstate.bodies[0];
     
     
 
@@ -68,7 +68,9 @@ public class Interface extends SimpleApplication {
     private final ActionListener LMB = new ActionListener(){
         @Override
         public void onAction(String name, boolean keyPressed, float tpf){
+            
             if(keyPressed){
+                
                 nearestToTarget=3000;
                 
                 for(Body body:Mainstate.bodies){
@@ -88,6 +90,7 @@ public class Interface extends SimpleApplication {
                 updateCam();
                 }
             }
+            
         }
         };
     
@@ -166,6 +169,7 @@ public class Interface extends SimpleApplication {
         cam.lookAt(targetCoord, new Vector3f(0, 1 ,0));
 
     }
+    
     
     
 }
