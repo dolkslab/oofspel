@@ -2,28 +2,62 @@
 <nifty xmlns="http://nifty-gui.sourceforge.net/nifty-1.3.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nifty-gui.sourceforge.net/nifty-1.3.xsd http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
     <useStyles filename="nifty-default-styles.xml" />
     <useControls filename="nifty-default-controls.xml" />
+   
+    
+    
+    <controlDefinition name="horizontalSliderR" style="nifty-horizontal-slider"
+    controller="de.lessvoid.nifty.controls.slider.SliderControl"
+    inputMapping="de.lessvoid.nifty.controls.scrollbar.ScrollbarInputMapping">
+        <panel style="#panel">
+            <interact onMouseWheel="mouseWheel()" onRelease="onRelease()"/>
+            <image style="#left">
+                <interact onClickRepeat="upClick()" onRelease="onRelease()"/>
+            </image>
+            <image id="#background" style="#background">
+                <interact onClick="mouseClick()" onClickMouseMove="mouseClick()" onRelease="onRelease()"/>
+                <image id="#position" style="#position">
+                    <interact onClick="mouseClick()" onClickMouseMove="mouseClick()" onRelease="onRelease()"/>
+                        <!-- ^ ^ ^ ADD THIS ^ ^ ^ -->
+                </image>
+            </image>
+            <image style="#right">
+                <interact onClickRepeat="downClick()" onRelease="onRelease()"/>
+            </image>
+        </panel>
+    </controlDefinition>
 
-    <screen id="select" controller="gui.InterfaceController">
+    
+
+    <screen id="edit" controller="gui.InterfaceController">
         <layer childLayout="vertical">
-            <panel id="panel" height="20%" width="20%" align="right" childLayout="vertical" visibleToMouse="true" backgroundColor="#ff0000">
+            <panel id="panel" height="100%" width="20%" align="right" childLayout="vertical" visibleToMouse="true" backgroundColor="#ff0000">
                 <control id="hideButton" name="button" label="hide" align="right" width="50%"/>
-                <panel id="mass" height="40%" width="100%" align="left"  childLayout="vertical" visibleToMouse="true" backgroundColor="#ffff00">
-                    <control id="sliderMass" name="horizontalSlider" width="100%" height="50%" align = "left"  max="10" min="0.1" stepSize="0.05" buttonStepSize="0.5" initial="5.0" />
-                    <control id="iputMass" name="textfield" width="100px" align="left" height="40%" valign="bottom" text="0"/>
+                <control id="targetName" name="label" width ="20%" align="center" text="Sun"/>
+                <panel id="mass" height="60px" width="100%" align="left"  childLayout="vertical" visibleToMouse="true" backgroundColor="#ffff00">
+                    <control id="sliderMass" name="horizontalSliderR" visibleToMouse="true" width="100%" height="50%" align = "left"  max="1" min="-1" stepSize="0.05" buttonStepSize="0.5" initial="0" />
+                    <panel id="massText" height="40%" width="100%" align="left" childLayout="horizontal" visibleToMouse="true" backgroundColor="#00ff00">
+                        <control id="inputMass" name="textfield" width="60%" align="left" height="100%" text="0"/>
+                        <control id="labelMass" name="label" width="15%" align="right" height="100%" text="kg"/>
+                    </panel>        
                 </panel>
-                <panel id="vel" height="40%" width="100%" align="left"  childLayout="vertical" visibleToMouse="true" backgroundColor="#ffff00">
-                    <control id="sliderVel" name="horizontalSlider" width="100%" height="50%" align = "left"  max="2" stepSize="0.05" buttonStepSize="0.5" initial="1.0"/>
-                    <control id="iputVel" name="textfield" width="100px" align="left" height="40%" valign="bottom" text="0"/>
+                <panel id="vel" height="60px" width="100%" align="left"  childLayout="vertical" visibleToMouse="true" backgroundColor="#ffff00">
+                    <control id="sliderVel" name="horizontalSliderR" width="100%" height="50%" align = "left"  max="1" min="-1" stepSize="0.05" buttonStepSize="0.5" initial="0"/>
+                    <panel id="velText" height="40%" width="100%" align="left" childLayout="horizontal" visibleToMouse="true" backgroundColor="#00ff00">
+                        <control id="inputVel" name="textfield" width="60%" align="left" height="100%" text="0"/>
+                        <control id="labelVel" name="label" width="15%" align="right" height="100%" text="m/s"/>
+                    </panel>
                 </panel>
-                
+            
             </panel>
         </layer>
     </screen> 
+    
     
     <screen id="start" controller="gui.InterfaceController">
       <layer id="baseLayer" childLayout="vertical">
           <panel id="startpanel" height="3%" width="10%" align="right" childLayout="vertical" visibleToMouse="true">
               <control id="editButton" name="button" label="edit" align = "right" width="100%"/>
+              
           </panel>
       </layer>
     </screen>     

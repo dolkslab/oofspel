@@ -1,11 +1,10 @@
 package gui;
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.input.KeyInput;
+
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
-import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.math.FastMath;
@@ -16,26 +15,38 @@ import com.jme3.niftygui.NiftyJmeDisplay;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
 import de.lessvoid.nifty.Nifty;
+import de.lessvoid.nifty.controls.Label;
+import de.lessvoid.nifty.controls.Slider;
+import de.lessvoid.nifty.controls.TextField;
+import java.util.logging.Filter;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 
 import state.Mainstate;
 import state.Body;
 
 public class Interface extends SimpleApplication {
     
-    private Nifty nifty;
-    private float azimuth = FastMath.HALF_PI, pitch=0, r=8, mouseX, mouseY;
-    private int camDir = 1;
-    public Vector3f camCoord = new Vector3f();
-    public boolean camEnabled = false;
-    public Vector2f mousePos, lastMousePos = new Vector2f(0, 0);
-    public Vector3f targetCoord = new Vector3f(0, 0, 0);
-    private float nearestToTarget;
-    public Body selectedTarget = Mainstate.bodies[0];
-    
+    public Nifty nifty;
+    private float azimuth = FastMath.HALF_PI, pitch=2, r=Mainstate.scale*Mainstate.AU*4;
+    public Vector3f cam_coord = new Vector3f();
+    public boolean cam_enabled = false;
+    public boolean update_target = true;
+    public Vector2f mouse_pos, last_mouse_pos = new Vector2f(0, 0);
+    public Vector3f target_coord = new Vector3f(0, 0, 0);
+    private float nearest_to_target;
+    public Body selected_target;
+    public Slider[] sliders = new Slider[2];
+    public TextField[] text_fields = new TextField[2];
+    public Label label_target_name;
+    public boolean gui_hidden = true;
     
 
     @Override
-    public void simpleInitApp() {        
+    public void simpleInitApp() {    
+        System.out.println(r);
         
         NiftyJmeDisplay niftyDisplay = new NiftyJmeDisplay(assetManager,
                 inputManager,
@@ -43,11 +54,14 @@ public class Interface extends SimpleApplication {
                 guiViewPort, 2048, 2048);
         nifty = niftyDisplay.getNifty();
         InterfaceController controller = new InterfaceController(this);
-        nifty.fromXml("Interface/gui.xml", "select", controller);
+        nifty.fromXml("Interface/gui.xml", "start", controller);
+        nifty.fromXml("Interface/gui.xml", "edit", controller);
+        
         guiViewPort.addProcessor(niftyDisplay);
         inputManager.setCursorVisible(true);
         stateManager.attach(new Mainstate(this));
         flyCam.setEnabled(false);
+        update_cam_pos();
         inputManager.addMapping("camMove" , new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
         inputManager.addListener(RMB, "camMove"); 
         inputManager.addMapping("LMB", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
@@ -62,32 +76,45 @@ public class Interface extends SimpleApplication {
         inputManager.addMapping("wheelDown", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false));
         inputManager.addListener(analogListener, "wheelUp");
         inputManager.addListener(analogListener, "wheelDown");
-        inputManager.getCursorPosition();
+        inputManager.getCursorPosition(); 
+        Logger.getLogger("de.lessvoid.nifty.Nifty").setFilter(new Filter(){
+        @Override
+        public boolean isLoggable(LogRecord lr) {
+            boolean isReregisterMessage = lr.getMessage().contains("The new definition will override the previous.");
+            return !isReregisterMessage;
+            }
+        });
+        Logger.getLogger("").setLevel(Level.SEVERE);
+        
         
     }
+    
+    
+    
     private final ActionListener LMB = new ActionListener(){
         @Override
         public void onAction(String name, boolean keyPressed, float tpf){
             
             if(keyPressed){
                 
-                nearestToTarget=3000;
+                nearest_to_target=3000;
                 
                 for(Body body:Mainstate.bodies){
-                    Vector2f screenPos = new Vector2f(cam.getScreenCoordinates(new Vector3f(body.px*Mainstate.scale, 0, body.py*Mainstate.scale)).x,
-                                                      cam.getScreenCoordinates(new Vector3f(body.px*Mainstate.scale, 0, body.py*Mainstate.scale)).y );
-                    float mouseDistance = screenPos.distance(mousePos);
+                    Vector2f screenPos = new Vector2f(cam.getScreenCoordinates(body.p.mult(Mainstate.scale)).x,
+                                                      cam.getScreenCoordinates(body.p.mult(Mainstate.scale)).y);
+                    float mouseDistance = screenPos.distance(mouse_pos);
                     
-                    if(mouseDistance < nearestToTarget && mouseDistance < 50){
-                        selectedTarget=body;
-                        nearestToTarget=mouseDistance;
+                    if(mouseDistance < nearest_to_target && mouseDistance < 50){
+                        selected_target=body;
+                        nearest_to_target=mouseDistance;
+                        label_target_name.setText(selected_target.name);
+                        update_target_values();
                     } 
                     
                 }
-                if(nearestToTarget != 3000){
-                targetCoord=rootNode.getChild(selectedTarget.name).getLocalTranslation();
-                System.out.println(selectedTarget.name);
-                updateCam();
+                if(nearest_to_target != 3000){
+                target_coord=rootNode.getChild(selected_target.name).getLocalTranslation();
+                update_cam();
                 }
             }
             
@@ -99,12 +126,12 @@ public class Interface extends SimpleApplication {
         @Override
         public void onAction(String name, boolean keyPressed, float tpf){
             if(keyPressed){
-                lastMousePos=new Vector2f(inputManager.getCursorPosition().getX(), inputManager.getCursorPosition().getY());
-                camEnabled=true;     
+                last_mouse_pos=new Vector2f(inputManager.getCursorPosition().getX(), inputManager.getCursorPosition().getY());
+                cam_enabled=true;     
             }
             else {
                 inputManager.setCursorVisible(true);
-                camEnabled=false;
+                cam_enabled=false;
                 
             }
         }
@@ -115,38 +142,30 @@ public class Interface extends SimpleApplication {
         @Override
         public void onAnalog(String name, float value, float tpf) {
             if(name.equals("wheelUp")){
-                updateCamDistance(value);
+                update_cam_distance(value);
             }
             else if(name.equals("wheelDown")){
-                updateCamDistance(-value);
+                update_cam_distance(-value);
                 
             }
         }
     };
     
-    
-    
-    public void hide() {
-        nifty.gotoScreen("start");
 
-    }
-    public void edit() {
-        nifty.gotoScreen("select");
+    
+    public Vector3f update_cam_distance(float zoom){
+        r+=zoom*(cam_coord.distance(target_coord)-1)*0.05;
+        FastMath.cartesianToSpherical(cam_coord, new Vector3f(r, azimuth, pitch));
+        FastMath.sphericalToCartesian(new Vector3f(r, azimuth, pitch), cam_coord);
+        return cam_coord;
     }
     
-    public Vector3f updateCamDistance(float zoom){
-        r+=zoom*(camCoord.distance(targetCoord)-1)*0.05;
-        FastMath.cartesianToSpherical(camCoord, new Vector3f(r, azimuth, pitch));
-        FastMath.sphericalToCartesian(new Vector3f(r, azimuth, pitch), camCoord);
-        return camCoord;
-    }
-    
-    public Vector3f updateCamPos(){
+    public Vector3f update_cam_pos(){
         
-        mousePos=inputManager.getCursorPosition();
+        mouse_pos=inputManager.getCursorPosition();
         
-        azimuth += (mousePos.x-lastMousePos.x)/100;
-        pitch -= (mousePos.y-lastMousePos.y)/100;
+        azimuth += (mouse_pos.x-last_mouse_pos.x)/100;
+        pitch -= (mouse_pos.y-last_mouse_pos.y)/100;
         
         if(pitch > FastMath.HALF_PI){
             pitch = FastMath.HALF_PI-0.00001f;
@@ -155,21 +174,37 @@ public class Interface extends SimpleApplication {
             pitch = -FastMath.HALF_PI+0.00001f;
         }
         
-        FastMath.sphericalToCartesian(new Vector3f(r, azimuth ,pitch), camCoord);
+        FastMath.sphericalToCartesian(new Vector3f(r, azimuth ,pitch), cam_coord);
        
-        lastMousePos=new Vector2f(mousePos.getX(), mousePos.getY());
+        last_mouse_pos=new Vector2f(mouse_pos.getX(), mouse_pos.getY());
         
-        return camCoord;
+        return cam_coord;
     }
     
-    public void updateCam(){
+    public void update_cam(){
         
         
-        cam.setLocation(camCoord.add(targetCoord));
-        cam.lookAt(targetCoord, new Vector3f(0, 1 ,0));
+        cam.setLocation(cam_coord.add(target_coord));
+        cam.lookAt(target_coord, new Vector3f(0, 1 ,0));
+        
+    }
+    
+    public void update_target_values(){
+        selected_target.mass += (selected_target.mass/500)*sliders[0].getValue();
+        selected_target.v = selected_target.v.add(selected_target.v.mult(sliders[1].getValue()/500)); 
+        text_fields[0].setText(Float.toString(selected_target.mass));
+        text_fields[1].setText(Float.toString(selected_target.v.length()));
+        update_target = false;
+    }
+    
+    public void hide() {
+        gui_hidden = true;
+        nifty.gotoScreen("start");
 
     }
-    
-    
+    public void edit() {
+        gui_hidden = false;
+        nifty.gotoScreen("edit");
+    }
     
 }

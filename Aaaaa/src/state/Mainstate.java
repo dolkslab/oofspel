@@ -1,4 +1,4 @@
-/*
+    /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -23,10 +23,9 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import static com.jme3.scene.VertexBuffer.Type.Color;
 import com.jme3.scene.shape.Sphere;
-import com.jme3.texture.Texture;
 import com.jme3.util.TangentBinormalGenerator;
+import de.lessvoid.nifty.controls.Slider;
 /**
  *
  * @author oofer
@@ -34,30 +33,28 @@ import com.jme3.util.TangentBinormalGenerator;
 
 public class Mainstate extends AbstractAppState {
 
-    private final Node rootNode;
-    public final Node localRootNode = new Node ("Test 1");
-    private AssetManager assetManager;
-    private final InputManager inputManager;
+    private final Node root_node;
+    public final Node local_root_node = new Node ("Test 1");
+    private final AssetManager asset_manager;
+    private final InputManager input_manager;
     
     
     
-    private Quaternion day = new Quaternion();
+    private final Quaternion day = new Quaternion();
     public static Body bodies[] = new Body[4];
-    private float[] total_f;
-    private float total_fy;
-    private float total_fx;
+    public Vector3f total_f;
     public static final float AU = 149.6f * FastMath.pow(10, 9);
-    public static final float scale = 4/AU;
-    private final float timestep = 24*3600;
+    public static final float scale = 40/AU;
+    private final float time_step = 24*3600;
     private float speed = 1f;
     
     
     private final Interface app;
         
     public Mainstate(Interface app){
-        rootNode = app.getRootNode();
-        inputManager = app.getInputManager();
-        assetManager = app.getAssetManager();
+        root_node = app.getRootNode();
+        input_manager = app.getInputManager();
+        asset_manager = app.getAssetManager();
         this.app = app;
         
     }
@@ -69,105 +66,98 @@ public class Mainstate extends AbstractAppState {
     public void initialize(AppStateManager stateManager, Application app) {
         super.initialize(stateManager, app);
         
-        rootNode.attachChild(localRootNode);
-        
-   
-        
-      
-        
-        
+        root_node.attachChild(local_root_node);
 
-        Sphere SunMesh = new Sphere(32,32, 0.3f);
-        Geometry SunGeo = new Geometry("Sun", SunMesh);
-        SunMesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
-        TangentBinormalGenerator.generate(SunMesh);           // for lighting effect
-        Material SunMat = assetManager.loadMaterial("Materials/Sun.j3m");
-        SunMat.setBoolean("UseMaterialColors",true);
-        SunMat.setColor("Diffuse",ColorRGBA.White);
-        SunMat.setColor("Specular",ColorRGBA.White);
-        SunMat.setFloat("Shininess", 64f);  // [0,128]
-        SunMat.setColor("GlowColor", new ColorRGBA(1, 1, 1, 1));
+        Sphere sun_mesh = new Sphere(32,32, 5f);
+        Geometry sun_geo = new Geometry("Sun", sun_mesh);
+        sun_mesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
+        TangentBinormalGenerator.generate(sun_mesh);           // for lighting effect
+        Material sun_mat = asset_manager.loadMaterial("Materials/Sun.j3m");
+        sun_mat.setBoolean("UseMaterialColors",true);
+        sun_mat.setColor("Diffuse",ColorRGBA.White);
+        sun_mat.setColor("Specular",ColorRGBA.White);
+        sun_mat.setFloat("Shininess", 64f);  // [0,128]
+        sun_mat.setColor("GlowColor", new ColorRGBA(1, 1, 1, 1));
        
-        
-        SunGeo.setMaterial(SunMat);
-        localRootNode.attachChild(SunGeo);
+        sun_geo.setMaterial(sun_mat);
+        local_root_node.attachChild(sun_geo);
 
         PointLight light = new PointLight();
         light.setPosition(new Vector3f(0, 0 ,0));
         light.setRadius(100f);
         light.setColor(ColorRGBA.White);
-        localRootNode.addLight(light);
+        local_root_node.addLight(light);
 
-        Sphere EarthMesh = new Sphere(32,32, 0.1f);
-        Geometry EarthGeo = new Geometry("Earth", EarthMesh);
-        EarthMesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
-        TangentBinormalGenerator.generate(EarthMesh);           // for lighting effect
-        Material EarthMat = assetManager.loadMaterial("Materials/Planet.j3m");
-        EarthMat.setBoolean("UseMaterialColors",true);
-        EarthMat.setColor("Diffuse",ColorRGBA.White);
-        EarthMat.setColor("Specular",ColorRGBA.White);
-        EarthMat.setFloat("Shininess", 64f);  // [0,128]
-        EarthGeo.setMaterial(EarthMat);
-        localRootNode.attachChild(EarthGeo);
-        EarthGeo.setLocalTranslation(3, 0, 0);
+        Sphere earth_mesh = new Sphere(32,32, 1f);
+        Geometry earth_geo = new Geometry("Earth", earth_mesh);
+        earth_mesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
+        TangentBinormalGenerator.generate(earth_mesh);           // for lighting effect
+        Material earth_mat = asset_manager.loadMaterial("Materials/Planet.j3m");
+        earth_mat.setBoolean("UseMaterialColors",true);
+        earth_mat.setColor("Diffuse",ColorRGBA.White);
+        earth_mat.setColor("Specular",ColorRGBA.White);
+        earth_mat.setFloat("Shininess", 64f);  // [0,128]
+        earth_geo.setMaterial(earth_mat);
+        local_root_node.attachChild(earth_geo);
+        earth_geo.setLocalTranslation(3, 0, 0);
         
-        Sphere VenusMesh = new Sphere(32, 32, 0.05f);
-        Geometry VenusGeo = new Geometry("Venus", VenusMesh);
-        VenusMesh.setTextureMode(Sphere.TextureMode.Projected);
-        TangentBinormalGenerator.generate(VenusMesh);
-        VenusGeo.setMaterial(SunMat);
-        localRootNode.attachChild(VenusGeo);
+        Sphere venus_mesh = new Sphere(32, 32, 0.7f);
+        Geometry venus_geo = new Geometry("Venus", venus_mesh);
+        venus_mesh.setTextureMode(Sphere.TextureMode.Projected);
+        TangentBinormalGenerator.generate(venus_mesh);
+        venus_geo.setMaterial(sun_mat);
+        local_root_node.attachChild(venus_geo);
         
-        Sphere MarsMesh = new Sphere(32, 32, 0.04f);
-        Geometry MarsGeo = new Geometry("Mars", MarsMesh);
-        MarsMesh.setTextureMode(Sphere.TextureMode.Projected);
-        TangentBinormalGenerator.generate(MarsMesh);
-        MarsGeo.setMaterial(SunMat);
-        localRootNode.attachChild(MarsGeo);
+        Sphere mars_mesh = new Sphere(32, 32, 0.3f);
+        Geometry mars_geo = new Geometry("Mars", mars_mesh);
+        mars_mesh.setTextureMode(Sphere.TextureMode.Projected);
+        TangentBinormalGenerator.generate(mars_mesh);
+        mars_geo.setMaterial(sun_mat);
+        local_root_node.attachChild(mars_geo);
         
+        input_manager.addMapping("Pause", new KeyTrigger(KeyInput.KEY_P));
+        input_manager.addListener(action_listener, "Pause");
+        input_manager.addMapping("Test", new KeyTrigger(KeyInput.KEY_T));
+        input_manager.addListener(action_listener, "Test");
+        input_manager.addMapping("speedup", new KeyTrigger(KeyInput.KEY_I));
+        input_manager.addListener(action_listener, "speedup");
+        input_manager.addMapping("slowdown", new KeyTrigger(KeyInput.KEY_K));
+        input_manager.addListener(action_listener, "slowdown");
         
+        init_bodies();
         
-
-        
-        inputManager.addMapping("Pause", new KeyTrigger(KeyInput.KEY_P));
-        inputManager.addListener(actionListener, "Pause");
-        inputManager.addMapping("Test", new KeyTrigger(KeyInput.KEY_T));
-        inputManager.addListener(actionListener, "Test");
-        inputManager.addMapping("speedup", new KeyTrigger(KeyInput.KEY_I));
-        inputManager.addListener(actionListener, "speedup");
-        inputManager.addMapping("slowdown", new KeyTrigger(KeyInput.KEY_K));
-        inputManager.addListener(actionListener, "slowdown");
-        
-   
-        
-        
-        initBodies();
-        
-	setEnabled(false);
     }
     
-    public void initBodies(){
-        bodies[0] = new Body ("Sun", (1.98892f * FastMath.pow(10, 30)), 0f, 0f, 0f); //25.449f);
-        bodies[1] = new Body ("Venus", (4.8685f * FastMath.pow(10, 24)), (0.723f*AU) ,(35.02f*1000f), 116.750f);
-	bodies[2] = new Body ("Earth", (5.9742f * FastMath.pow(10, 24)), AU, (29.783f * 1000f), 1f);
-        bodies[3] = new Body ("Mars", (0.64171f * FastMath.pow(10, 24)), (1.524f*AU) ,(24.07f*1000f), 1.027f);
+    public void init_bodies(){
+        
+        //(naam, massa, startplaats, startsnelheid, inclinatie(deg), daglengte)
+        bodies[0] = new Body ("Sun", (1.98892f * FastMath.pow(10, 30)), 0f, 0f, 0f, 0f); //25.449f);
+        bodies[1] = new Body ("Venus", (4.8685f * FastMath.pow(10, 24)), (0.723f*AU) ,(35.02f*1000f), 3.39f, 116.750f);
+	bodies[2] = new Body ("Earth", (5.9742f * FastMath.pow(10, 24)), AU, (29.783f * 1000f), 0f, 1f);
+        bodies[3] = new Body ("Mars", (0.64171f * FastMath.pow(10, 24)), (1.524f*AU) ,(24.07f*1000f),1.850f, 1.027f);
+        if(app.selected_target == null)
+            app.selected_target = bodies[0];
         for(Body body:bodies){
-            Spatial MoveGeo = localRootNode.getChild(body.name);
-                MoveGeo.setLocalTranslation(new Vector3f(body.px*scale, 0, body.py*scale));
+            Spatial MoveGeo = local_root_node.getChild(body.name);
+                MoveGeo.setLocalTranslation(new Vector3f(body.p.x*scale, 0, body.p.y*scale));
         }
+        
+        
     }
     
-    private final ActionListener actionListener = new ActionListener() {
+    private final ActionListener action_listener = new ActionListener() {
        @Override
        public void onAction(String name, boolean keyPressed, float tpf) {
             if (name.equals("Pause") && !keyPressed){
                 setEnabled(!isEnabled());
-                app.lastMousePos=new Vector2f(inputManager.getCursorPosition().getX(), inputManager.getCursorPosition().getY());
-                app.updateCamPos();
+                app.last_mouse_pos=new Vector2f(input_manager.getCursorPosition().getX(), input_manager.getCursorPosition().getY());
+                app.update_cam_pos();
             }
             if (name.equals("Test") && !keyPressed){
                 setEnabled(false);
-                initBodies();
+                init_bodies();
+                if(!app.gui_hidden)
+                    app.update_target_values();
                 
                 setEnabled(true);
             }
@@ -192,7 +182,7 @@ public class Mainstate extends AbstractAppState {
     
     @Override
     public void cleanup(){
-        rootNode.detachChild(localRootNode);
+        root_node.detachChild(local_root_node);
         
         super.cleanup();
     }
@@ -207,7 +197,7 @@ public class Mainstate extends AbstractAppState {
             //deze for loop loopt door alle elementen in de lijst "bodies".
             for(Body self:bodies){
                 
-                total_fy = total_fx = 0;
+                total_f = Vector3f.ZERO;
                     for(Body other:bodies){
                         
                         // Om de totale kracht te berekenen, moeten we voor elk lichaam de attractie
@@ -215,30 +205,33 @@ public class Mainstate extends AbstractAppState {
                         if(!other.name.equals(self.name)){
                             
                             //deze functie berekent de kracht tussen 2 lichamen.
-                            total_f = Calculate.Attraction(self, other);
-                            //System.out.println(total_f[0] + " " + total_f[1]+ " " +  self.name + " " + other.name);
-                            total_fx += total_f[0];
-                            total_fy += total_f[1];
+                            total_f = total_f.add(Calculate.Attraction(self, other));        
                             
                     }
                 }
                 //bereken snelheid(f=ma).
-                self.vx = self.vx + (total_fx/self.mass)*timestep*speed;
-                self.vy = self.vy + (total_fy/self.mass)*timestep*speed;
+                self.v = self.v.add(total_f.divide(self.mass).mult(time_step*speed));
+                
+                if(app.selected_target == self && !app.gui_hidden){
+                    for(Slider slider:app.sliders){
+                        if(slider.getValue() != 0)
+                            app.update_target = true;
+                    }
+                    if(app.update_target)
+                        app.update_target_values();
+                }
                     
                 //berken plaats met snelheid
-                self.px = self.px + (self.vx * timestep*speed);
-                self.py = self.py + (self.vy * timestep*speed);
-                Spatial MoveGeo = localRootNode.getChild(self.name);
-                MoveGeo.setLocalTranslation(new Vector3f(self.px*scale, 0, self.py*scale));
-                day.fromAngleAxis(FastMath.PI*2*speed*(timestep/24*3600)*self.day, new Vector3f(0,1,0));
+                self.p = self.p.add(self.v.mult(time_step*speed)); 
+                
+                Spatial MoveGeo = local_root_node.getChild(self.name);
+                MoveGeo.setLocalTranslation(self.p.mult(scale));
+                day.fromAngleAxis(FastMath.PI*2*speed*(time_step/24*3600)*self.day, new Vector3f(0,1,0));
                 MoveGeo.rotate(day);
                 
-                if(app.camEnabled)
-                    app.updateCamPos(); 
-                app.updateCam();
-                
-                
+                if(app.cam_enabled)
+                    app.update_cam_pos(); 
+                app.update_cam();  
            } 
     }
 }

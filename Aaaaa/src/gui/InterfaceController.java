@@ -3,17 +3,19 @@ package gui;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.NiftyEventSubscriber;
 import de.lessvoid.nifty.controls.ButtonClickedEvent;
-import de.lessvoid.nifty.controls.ListBox;
-import de.lessvoid.nifty.controls.ListBoxSelectionChangedEvent;
-import de.lessvoid.nifty.controls.SliderChangedEvent;
+import de.lessvoid.nifty.controls.Slider;
+import de.lessvoid.nifty.controls.Label;
+import de.lessvoid.nifty.controls.TextField;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.screen.ScreenController;
-import java.util.List;
 
 
 public class InterfaceController implements ScreenController {
 
     private final Interface app;
+    
+    
+    
 
     public InterfaceController(Interface app) {
         this.app = app;
@@ -21,16 +23,16 @@ public class InterfaceController implements ScreenController {
     
     @Override
     public void bind(Nifty nifty, Screen screen) {
+        if(app.nifty.getScreen("edit") == screen){
+        app.sliders[0] = screen.findNiftyControl("sliderMass", Slider.class);
+        app.sliders[1] = screen.findNiftyControl("sliderVel", Slider.class);
+        app.text_fields[0] = screen.findNiftyControl("inputMass", TextField.class);
+        app.text_fields[1] = screen.findNiftyControl("inputVel", TextField.class);
+        app.label_target_name = screen.findNiftyControl("targetName", Label.class);
+        }
         
     }
 
-    @NiftyEventSubscriber(id = "sliderMass")
-    public void onSliderChanged(final String id, final SliderChangedEvent event){
-        app.selectedTarget.mass=app.selectedTarget.mass*event.getValue();
-        System.out.println(app.selectedTarget.mass);
-    }
-    
-    
     @NiftyEventSubscriber(id = "hideButton")
     public void onHideButtonClicked(final String id, final ButtonClickedEvent event) {
         app.hide();
@@ -39,13 +41,26 @@ public class InterfaceController implements ScreenController {
     
     @NiftyEventSubscriber(id = "editButton")
     public void onEditButtonClicked(final String id, final ButtonClickedEvent event) {
+        
         app.edit();
+        bind(app.nifty, app.nifty.getScreen("edit"));
+        app.update_target_values();
 
     }
     
-    public void testClick(){
-        System.out.println("you clicked here");
+
+    public void onRelease(){
+        
+        for(Slider slider:app.sliders){
+            if(slider.getValue() != 0)
+                slider.setValue(0);
+        }
+        
     }
+    
+    
+   
+    
     
     @Override
     public void onStartScreen() {
@@ -53,5 +68,5 @@ public class InterfaceController implements ScreenController {
     
     @Override
     public void onEndScreen() {
-    }
+        }
 }

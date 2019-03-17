@@ -6,6 +6,7 @@
 package state;
 
 import com.jme3.math.FastMath;
+import com.jme3.math.Vector3f;
 
 /**
  *
@@ -13,18 +14,15 @@ import com.jme3.math.FastMath;
  */
 public class Calculate {
     final static float G = 6.67408f*FastMath.pow(10, -11);
-    
-    public static float[] Attraction(Body self, Body other){
-        float dx = other.px-self.px;
-        float dy = other.py-self.py;
+
+    public static Vector3f Attraction(Body self, Body other){
+
+        float d = self.p.distance(other.p);
         
-        float d = FastMath.sqrt((FastMath.sqr(dx))+(FastMath.sqr(dy)));
         float f = (G * other.mass)*(self.mass/FastMath.sqr(d));
         
-        float theta = FastMath.atan2(dy, dx);
-        float[] forces = {(FastMath.cos(theta)*f), (FastMath.sin(theta)*f)};
-        //System.out.println(dx+ " " + f +" "+ self.name);
+        Vector3f forcevec = other.p.subtract(self.p).normalize().mult(f);
        
-        return forces;
+        return forcevec;
     }
 }
