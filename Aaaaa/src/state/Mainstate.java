@@ -13,6 +13,7 @@ import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.light.AmbientLight;
 import com.jme3.light.PointLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
@@ -40,12 +41,14 @@ public class Mainstate extends AbstractAppState {
     
     
     
-    private final Quaternion day = new Quaternion();
+    private final Quaternion day = new Quaternion(),pitch = new Quaternion();
+    
     public static Body bodies[] = new Body[4];
     public Vector3f total_f;
     public static final float AU = 149.6f * FastMath.pow(10, 9);
     public static final float scale = 40/AU;
-    private final float time_step = 24*3600;
+    public float time_step;
+    public float time_per_second = 24*3600;
     private float speed = 1f;
     
     
@@ -85,8 +88,12 @@ public class Mainstate extends AbstractAppState {
         PointLight light = new PointLight();
         light.setPosition(new Vector3f(0, 0 ,0));
         light.setRadius(100f);
-        light.setColor(ColorRGBA.White);
+        light.setColor(ColorRGBA.White.mult(2.5f));
         local_root_node.addLight(light);
+        
+        AmbientLight al = new AmbientLight();
+        al.setColor(ColorRGBA.White.mult(10.3f));
+        local_root_node.addLight(al);
 
         Sphere earth_mesh = new Sphere(32,32, 1f);
         Geometry earth_geo = new Geometry("Earth", earth_mesh);
@@ -115,6 +122,8 @@ public class Mainstate extends AbstractAppState {
         mars_geo.setMaterial(sun_mat);
         local_root_node.attachChild(mars_geo);
         
+        
+        
         input_manager.addMapping("Pause", new KeyTrigger(KeyInput.KEY_P));
         input_manager.addListener(action_listener, "Pause");
         input_manager.addMapping("Test", new KeyTrigger(KeyInput.KEY_T));
@@ -130,8 +139,8 @@ public class Mainstate extends AbstractAppState {
     
     public void init_bodies(){
         
-        //(naam, massa, startplaats, startsnelheid, inclinatie(deg), daglengte)
-        bodies[0] = new Body ("Sun", (1.98892f * FastMath.pow(10, 30)), 0f, 0f, 0f, 0f); //25.449f);
+        //(naam, massa, startplaats, startsnelheid, inclinatie(deg), daglengte, hoek van rotatieas)
+        bodies[0] = new Body ("Sun", (1.98892f * FastMath.pow(10, 30)), 0f, 0f, 0f, 25.449f);
         bodies[1] = new Body ("Venus", (4.8685f * FastMath.pow(10, 24)), (0.723f*AU) ,(35.02f*1000f), 3.39f, 116.750f);
 	bodies[2] = new Body ("Earth", (5.9742f * FastMath.pow(10, 24)), AU, (29.783f * 1000f), 0f, 1f);
         bodies[3] = new Body ("Mars", (0.64171f * FastMath.pow(10, 24)), (1.524f*AU) ,(24.07f*1000f),1.850f, 1.027f);
@@ -140,6 +149,8 @@ public class Mainstate extends AbstractAppState {
         for(Body body:bodies){
             Spatial MoveGeo = local_root_node.getChild(body.name);
                 MoveGeo.setLocalTranslation(new Vector3f(body.p.x*scale, 0, body.p.y*scale));
+                pitch.fromAngleAxis((-FastMath.HALF_PI)-FastMath.DEG_TO_RAD*-3, new Vector3f(1, 0, 0));
+                MoveGeo.rotate(pitch);
         }
         
         
@@ -159,14 +170,14 @@ public class Mainstate extends AbstractAppState {
                 if(!app.gui_hidden)
                     app.update_target_values();
                 
-                setEnabled(true);
+                //setEnabled(true);
             }
             if (name.equals("speedup") && !keyPressed){
-                speed += 0.2;
+                time_per_second += 12*3600;
             }
             if (name.equals("slowdown") && !keyPressed){
-                if(speed>0.2){
-                speed -= 0.2;
+                if(time_per_second>12*3600){
+                time_per_second -= 12*3600;
                 }
             }
 
@@ -193,6 +204,7 @@ public class Mainstate extends AbstractAppState {
     
     @Override
     public void update(float tpf) {
+        time_step = time_per_second*tpf;
             
             //deze for loop loopt door alle elementen in de lijst "bodies".
             for(Body self:bodies){
@@ -210,7 +222,7 @@ public class Mainstate extends AbstractAppState {
                     }
                 }
                 //bereken snelheid(f=ma).
-                self.v = self.v.add(total_f.divide(self.mass).mult(time_step*speed));
+                self.v = self.v.add(total_f.divide(self.mass).mult(time_step));
                 
                 if(app.selected_target == self && !app.gui_hidden){
                     for(Slider slider:app.sliders){
@@ -222,13 +234,13 @@ public class Mainstate extends AbstractAppState {
                 }
                     
                 //berken plaats met snelheid
-                self.p = self.p.add(self.v.mult(time_step*speed)); 
+                self.p = self.p.add(self.v.mult(time_step)); 
                 
                 Spatial MoveGeo = local_root_node.getChild(self.name);
                 MoveGeo.setLocalTranslation(self.p.mult(scale));
-                day.fromAngleAxis(FastMath.PI*2*speed*(time_step/24*3600)*self.day, new Vector3f(0,1,0));
+                day.fromAngleAxis(FastMath.PI*2*speed*(time_step/(24*3600))/self.day, new Vector3f(0,0,1));
                 MoveGeo.rotate(day);
-                
+                System.out.println(time_step);
                 if(app.cam_enabled)
                     app.update_cam_pos(); 
                 app.update_cam();  
