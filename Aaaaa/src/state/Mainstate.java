@@ -48,7 +48,7 @@ public class Mainstate extends AbstractAppState {
     public static final float AU = 149.6f * FastMath.pow(10, 9);
     public static final float scale = 40/AU;
     public float time_step;
-    public float time_per_second = 24*3600;
+    public float time_per_second = 10*24*3600;
     private float speed = 1f;
     
     
@@ -139,17 +139,17 @@ public class Mainstate extends AbstractAppState {
     
     public void init_bodies(){
         
-        //(naam, massa, startplaats, startsnelheid, inclinatie(deg), daglengte, hoek van rotatieas)
-        bodies[0] = new Body ("Sun", (1.98892f * FastMath.pow(10, 30)), 0f, 0f, 0f, 25.449f);
-        bodies[1] = new Body ("Venus", (4.8685f * FastMath.pow(10, 24)), (0.723f*AU) ,(35.02f*1000f), 3.39f, 116.750f);
-	bodies[2] = new Body ("Earth", (5.9742f * FastMath.pow(10, 24)), AU, (29.783f * 1000f), 0f, 1f);
-        bodies[3] = new Body ("Mars", (0.64171f * FastMath.pow(10, 24)), (1.524f*AU) ,(24.07f*1000f),1.850f, 1.027f);
+        //(naam, massa, startplaats, startsnelheid, inclinatie(deg), daglengte(dagen), hoek van rotatieas)
+        bodies[0] = new Body ("Sun", (1.98892f * FastMath.pow(10, 30)), 0f, 0f, 0f, 25.449f, 7.25f);
+        bodies[1] = new Body ("Venus", (4.8685f * FastMath.pow(10, 24)), (0.723f*AU) ,(35.02f*1000f), 3.39f, 116.750f, 177.36f);
+	bodies[2] = new Body ("Earth", (5.9742f * FastMath.pow(10, 24)), AU, (29.783f * 1000f), 0f, 1f, 23.44f);
+        bodies[3] = new Body ("Mars", (0.64171f * FastMath.pow(10, 24)), (1.524f*AU) ,(24.07f*1000f),1.850f, 1.027f, 25.19f);
         if(app.selected_target == null)
             app.selected_target = bodies[0];
         for(Body body:bodies){
             Spatial MoveGeo = local_root_node.getChild(body.name);
                 MoveGeo.setLocalTranslation(new Vector3f(body.p.x*scale, 0, body.p.y*scale));
-                pitch.fromAngleAxis((-FastMath.HALF_PI)-FastMath.DEG_TO_RAD*-3, new Vector3f(1, 0, 0));
+                pitch.fromAngleAxis((-FastMath.HALF_PI)-FastMath.DEG_TO_RAD*-body.obo, new Vector3f(1, 0, 0));
                 MoveGeo.rotate(pitch);
         }
         
@@ -238,9 +238,8 @@ public class Mainstate extends AbstractAppState {
                 
                 Spatial MoveGeo = local_root_node.getChild(self.name);
                 MoveGeo.setLocalTranslation(self.p.mult(scale));
-                day.fromAngleAxis(FastMath.PI*2*speed*(time_step/(24*3600))/self.day, new Vector3f(0,0,1));
+                day.fromAngleAxis(FastMath.PI*2*speed*(time_step/(24*3600))/self.day, new Vector3f(0,0,-1));
                 MoveGeo.rotate(day);
-                System.out.println(time_step);
                 if(app.cam_enabled)
                     app.update_cam_pos(); 
                 app.update_cam();  

@@ -17,7 +17,6 @@
                 <interact onClick="mouseClick()" onClickMouseMove="mouseClick()" onRelease="onRelease()"/>
                 <image id="#position" style="#position">
                     <interact onClick="mouseClick()" onClickMouseMove="mouseClick()" onRelease="onRelease()"/>
-                        <!-- ^ ^ ^ ADD THIS ^ ^ ^ -->
                 </image>
             </image>
             <image style="#right">
@@ -30,24 +29,34 @@
 
     <screen id="edit" controller="gui.InterfaceController">
         <layer childLayout="vertical">
-            <panel id="panel" height="100%" width="20%" align="right" childLayout="vertical" visibleToMouse="true" backgroundColor="#ff0000">
+            <panel id="panel" height="100%" width="20%" align="right" childLayout="vertical" visibleToMouse="true" backgroundColor="#6f0000">
                 <control id="hideButton" name="button" label="hide" align="right" width="50%"/>
                 <control id="targetName" name="label" width ="20%" align="center" text="Sun"/>
-                <panel id="mass" height="60px" width="100%" align="left"  childLayout="vertical" visibleToMouse="true" backgroundColor="#ffff00">
-                    <control id="sliderMass" name="horizontalSliderR" visibleToMouse="true" width="100%" height="50%" align = "left"  max="1" min="-1" stepSize="0.05" buttonStepSize="0.5" initial="0" />
-                    <panel id="massText" height="40%" width="100%" align="left" childLayout="horizontal" visibleToMouse="true" backgroundColor="#00ff00">
+                <panel id="mass" height="80px" width="100%" align="left"  childLayout="vertical" visibleToMouse="true"backgroundColor="#386f00">
+                    <control id="headerMass" name="label" width="100%" height ="30%" align="center" text="Mass:" color="#ffffff" backgroundColor="#006f6f"/>
+                    <control id="sliderMass" name="horizontalSliderR" visibleToMouse="true" width="100%" height="40%" align = "left"  max="1" min="-1" stepSize="0.05" buttonStepSize="0.5" initial="0" />
+                    <panel id="massText" height="30%" width="100%" align="left" childLayout="horizontal" visibleToMouse="true">
                         <control id="inputMass" name="textfield" width="60%" align="left" height="100%" text="0"/>
-                        <control id="labelMass" name="label" width="15%" align="right" height="100%" text="kg"/>
+                        <control id="unitMass" name="label" width="15%" align="right" height="100%" text="kg" color="#000000"/>
                     </panel>        
                 </panel>
-                <panel id="vel" height="60px" width="100%" align="left"  childLayout="vertical" visibleToMouse="true" backgroundColor="#ffff00">
-                    <control id="sliderVel" name="horizontalSliderR" width="100%" height="50%" align = "left"  max="1" min="-1" stepSize="0.05" buttonStepSize="0.5" initial="0"/>
-                    <panel id="velText" height="40%" width="100%" align="left" childLayout="horizontal" visibleToMouse="true" backgroundColor="#00ff00">
+                <panel id="vel" height="80px" width="100%" align="left"  childLayout="vertical" visibleToMouse="true" backgroundColor="#386f00">
+                    <control id="headerVel" name="label" width="100%" height ="30%" align="center" text="Velocity:" color="#ffffff" backgroundColor="#006f6f"/>
+                    <control id="sliderVel" name="horizontalSliderR" width="100%" height="40%" align = "left"  max="1" min="-1" stepSize="0.05" buttonStepSize="0.5" initial="0"/>
+                    <panel id="velText" height="30%" width="100%" align="left" childLayout="horizontal" visibleToMouse="true">
                         <control id="inputVel" name="textfield" width="60%" align="left" height="100%" text="0"/>
-                        <control id="labelVel" name="label" width="15%" align="right" height="100%" text="m/s"/>
+                        <control id="unitVel" name="label" width="15%" align="right" height="100%" text="m/s" color="#000000"/>
                     </panel>
                 </panel>
-            
+                <panel id="timescale" height="80px" width="100%" align="left"  childLayout="vertical" visibleToMouse="true" backgroundColor="#386f00">
+                    <control id="headerTmscl" name="label" width="100%" height ="30%" align="center" text="Velocity:" color="#ffffff" backgroundColor="#006f6f"/>
+                    <control id="sliderTmscl" name="horizontalSliderR" width="100%" height="40%" align = "left"  max="1" min="-1" stepSize="0.05" buttonStepSize="0.5" initial="0"/>
+                    <panel id="velText" height="30%" width="100%" align="left" childLayout="horizontal" visibleToMouse="true">
+                        <control id="inputTmscl" name="textfield" width="60%" align="left" height="100%" text="0"/>
+                        <control id="unitTmscl" name="label" width="15%" align="right" height="100%" text="days/s" color="#000000"/>
+                    </panel>
+                </panel>
+                
             </panel>
         </layer>
     </screen> 
