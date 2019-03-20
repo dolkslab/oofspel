@@ -31,7 +31,9 @@ public class InterfaceController implements ScreenController {
         app.text_fields[1] = screen.findNiftyControl("inputVel", TextField.class);
         app.text_fields[2] = screen.findNiftyControl("inputTmscl", TextField.class);
         app.label_target_name = screen.findNiftyControl("targetName", Label.class);
+        //app.update_target_values();
         }
+        
         
     }
 

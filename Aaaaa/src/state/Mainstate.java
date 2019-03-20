@@ -120,6 +120,15 @@ public class Mainstate extends AbstractAppState {
         mars_geo.setMaterial(sun_mat);
         local_root_node.attachChild(mars_geo);
         
+        Sphere test_mesh = new Sphere (32, 32, 0.2f);
+        Geometry test_geo = new Geometry("Test", test_mesh);
+
+        Material unshaded_mat = new Material(asset_manager, "Common/MatDefs/Misc/Unshaded.j3md");
+        unshaded_mat.setColor("Color", ColorRGBA.Blue);
+        test_geo.setMaterial(unshaded_mat);
+        
+        local_root_node.attachChild(test_geo);
+        
         
         
         input_manager.addMapping("Pause", new KeyTrigger(KeyInput.KEY_P));
@@ -132,7 +141,7 @@ public class Mainstate extends AbstractAppState {
         input_manager.addListener(action_listener, "slowdown");
         
         init_bodies();
-        setEnabled(false);
+        
     }
     
     public void init_bodies(){
@@ -161,17 +170,16 @@ public class Mainstate extends AbstractAppState {
        @Override
        public void onAction(String name, boolean keyPressed, float tpf) {
             if (name.equals("Pause") && !keyPressed){
-                setEnabled(!isEnabled());
-                app.last_mouse_pos=new Vector2f(input_manager.getCursorPosition().getX(), input_manager.getCursorPosition().getY());
-                app.update_cam_pos();
+                app.update_enabled=(!app.update_enabled);
+
             }
             if (name.equals("Test") && !keyPressed){
-                setEnabled(false);
+                app.update_enabled=false;
                 init_bodies();
                 if(!app.gui_hidden)
                     app.update_target_values();
                 
-                //setEnabled(true);
+               //app.update_enabled=true;
             }
             
 
@@ -198,44 +206,54 @@ public class Mainstate extends AbstractAppState {
     
     @Override
     public void update(float tpf) {
-        time_step = app.time_per_second*tpf;
+        Spatial test_spatial = local_root_node.getChild("Test");
+            test_spatial.setLocalScale(app.r/100);
+            System.out.println(app.r);
             
-            //deze for loop loopt door alle elementen in de lijst "bodies".
-            for(Body self:bodies){
-                
-                total_f = Vector3f.ZERO;
-                    for(Body other:bodies){
-                        
-                        // Om de totale kracht te berekenen, moeten we voor elk lichaam de attractie
-                        // met elke ander lichaam berekenen, deze loop loopt doet dat.
-                        if(!other.name.equals(self.name)){
-                            
-                            //deze functie berekent de kracht tussen 2 lichamen.
-                            total_f = total_f.add(Calculate.Attraction(self, other));        
-                            
-                    }
-                }
-                //bereken snelheid(f=ma).
-                self.v = self.v.add(total_f.divide(self.mass).mult(time_step));
-                if(app.selected_target.equals(self) && !app.gui_hidden){
-                    for(Slider slider:app.sliders){
-                        if(slider.getValue() != 0){
-                            app.update_target_values();
-                            break;
+        if(app.update_enabled){
+            time_step = app.time_per_second*tpf;
+
+                //deze for loop loopt door alle elementen in de lijst "bodies".
+                for(Body self:bodies){
+
+                    total_f = Vector3f.ZERO;
+                        for(Body other:bodies){
+
+                            // Om de totale kracht te berekenen, moeten we voor elk lichaam de attractie
+                            // met elke ander lichaam berekenen, deze loop loopt doet dat.
+                            if(!other.name.equals(self.name)){
+
+                                //deze functie berekent de kracht tussen 2 lichamen.
+                                total_f = total_f.add(Calculate.Attraction(self, other));        
+
                         }
                     }
-                }     
-                    
-                //berken plaats met snelheid
-                self.p = self.p.add(self.v.mult(time_step)); 
-                
-                Spatial MoveGeo = local_root_node.getChild(self.name);
-                MoveGeo.setLocalTranslation(self.p.mult(scale));
-                day.fromAngleAxis(FastMath.PI*2*(time_step/(24*3600))/self.day, new Vector3f(0,0,-1));
-                MoveGeo.rotate(day);
-                if(app.cam_enabled)
-                    app.update_cam_pos(); 
-                app.update_cam();  
+                    //bereken snelheid(f=ma).
+                    self.v = self.v.add(total_f.divide(self.mass).mult(time_step));
+                    if(app.selected_target.equals(self) && !app.gui_hidden){
+                        for(Slider slider:app.sliders){
+                            if(slider.getValue() != 0){
+                                app.update_target_values();
+                                break;
+                            }
+                        }
+                    }     
+
+                    //berken plaats met snelheid
+                    self.p = self.p.add(self.v.mult(time_step)); 
+
+                    Spatial MoveGeo = local_root_node.getChild(self.name);
+                    MoveGeo.setLocalTranslation(self.p.mult(scale));
+                    day.fromAngleAxis(FastMath.PI*2*(time_step/(24*3600))/self.day, new Vector3f(0,0,-1));
+                    MoveGeo.rotate(day);
+                    if(self.name.equals("Earth"))
+                        test_spatial.setLocalTranslation(MoveGeo.getLocalTranslation());
+                }
+                 
             }
+            if(app.cam_enabled)
+                app.update_cam_pos(); 
+            app.update_cam(); 
+            
     }
 }

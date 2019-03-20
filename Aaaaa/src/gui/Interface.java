@@ -30,7 +30,8 @@ import state.Body;
 public class Interface extends SimpleApplication {
     
     public Nifty nifty;
-    private float azimuth = FastMath.HALF_PI, pitch=2, r=Mainstate.scale*Mainstate.AU*4;
+    public float azimuth = FastMath.HALF_PI;
+    public float pitch=2, r=Mainstate.scale*Mainstate.AU*4;
     public Vector3f cam_coord = new Vector3f();
     public boolean cam_enabled = false;
     public Vector2f mouse_pos, last_mouse_pos = new Vector2f(0, 0);
@@ -42,6 +43,7 @@ public class Interface extends SimpleApplication {
     public Label label_target_name;
     public boolean gui_hidden = false;
     public float time_per_second = 10*24*3600;
+    public boolean update_enabled = false;
     
     
 
@@ -86,6 +88,7 @@ public class Interface extends SimpleApplication {
             }
         });
         Logger.getLogger("").setLevel(Level.SEVERE);
+        update_enabled=true;
         
         
     }
