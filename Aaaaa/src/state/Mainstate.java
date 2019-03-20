@@ -48,8 +48,7 @@ public class Mainstate extends AbstractAppState {
     public static final float AU = 149.6f * FastMath.pow(10, 9);
     public static final float scale = 40/AU;
     public float time_step;
-    public float time_per_second = 10*24*3600;
-    private float speed = 1f;
+
     
     
     private final Interface app;
@@ -59,7 +58,6 @@ public class Mainstate extends AbstractAppState {
         input_manager = app.getInputManager();
         asset_manager = app.getAssetManager();
         this.app = app;
-        
     }
     
 
@@ -134,7 +132,7 @@ public class Mainstate extends AbstractAppState {
         input_manager.addListener(action_listener, "slowdown");
         
         init_bodies();
-        
+        setEnabled(false);
     }
     
     public void init_bodies(){
@@ -153,6 +151,9 @@ public class Mainstate extends AbstractAppState {
                 MoveGeo.rotate(pitch);
         }
         
+    }
+    
+    public static void testf(){
         
     }
     
@@ -172,14 +173,7 @@ public class Mainstate extends AbstractAppState {
                 
                 //setEnabled(true);
             }
-            if (name.equals("speedup") && !keyPressed){
-                time_per_second += 12*3600;
-            }
-            if (name.equals("slowdown") && !keyPressed){
-                if(time_per_second>12*3600){
-                time_per_second -= 12*3600;
-                }
-            }
+            
 
         }
     };
@@ -204,7 +198,7 @@ public class Mainstate extends AbstractAppState {
     
     @Override
     public void update(float tpf) {
-        time_step = time_per_second*tpf;
+        time_step = app.time_per_second*tpf;
             
             //deze for loop loopt door alle elementen in de lijst "bodies".
             for(Body self:bodies){
@@ -223,26 +217,25 @@ public class Mainstate extends AbstractAppState {
                 }
                 //bereken snelheid(f=ma).
                 self.v = self.v.add(total_f.divide(self.mass).mult(time_step));
-                
-                if(app.selected_target == self && !app.gui_hidden){
+                if(app.selected_target.equals(self) && !app.gui_hidden){
                     for(Slider slider:app.sliders){
-                        if(slider.getValue() != 0)
-                            app.update_target = true;
+                        if(slider.getValue() != 0){
+                            app.update_target_values();
+                            break;
+                        }
                     }
-                    if(app.update_target)
-                        app.update_target_values();
-                }
+                }     
                     
                 //berken plaats met snelheid
                 self.p = self.p.add(self.v.mult(time_step)); 
                 
                 Spatial MoveGeo = local_root_node.getChild(self.name);
                 MoveGeo.setLocalTranslation(self.p.mult(scale));
-                day.fromAngleAxis(FastMath.PI*2*speed*(time_step/(24*3600))/self.day, new Vector3f(0,0,-1));
+                day.fromAngleAxis(FastMath.PI*2*(time_step/(24*3600))/self.day, new Vector3f(0,0,-1));
                 MoveGeo.rotate(day);
                 if(app.cam_enabled)
                     app.update_cam_pos(); 
                 app.update_cam();  
-           } 
+            }
     }
 }

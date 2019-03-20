@@ -26,8 +26,10 @@ public class InterfaceController implements ScreenController {
         if(app.nifty.getScreen("edit") == screen){
         app.sliders[0] = screen.findNiftyControl("sliderMass", Slider.class);
         app.sliders[1] = screen.findNiftyControl("sliderVel", Slider.class);
+        app.sliders[2] = screen.findNiftyControl("sliderTmscl", Slider.class);
         app.text_fields[0] = screen.findNiftyControl("inputMass", TextField.class);
         app.text_fields[1] = screen.findNiftyControl("inputVel", TextField.class);
+        app.text_fields[2] = screen.findNiftyControl("inputTmscl", TextField.class);
         app.label_target_name = screen.findNiftyControl("targetName", Label.class);
         }
         

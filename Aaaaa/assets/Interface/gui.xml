@@ -49,7 +49,7 @@
                     </panel>
                 </panel>
                 <panel id="timescale" height="80px" width="100%" align="left"  childLayout="vertical" visibleToMouse="true" backgroundColor="#386f00">
-                    <control id="headerTmscl" name="label" width="100%" height ="30%" align="center" text="Velocity:" color="#ffffff" backgroundColor="#006f6f"/>
+                    <control id="headerTmscl" name="label" width="100%" height ="30%" align="center" text="Timescale:" color="#ffffff" backgroundColor="#006f6f"/>
                     <control id="sliderTmscl" name="horizontalSliderR" width="100%" height="40%" align = "left"  max="1" min="-1" stepSize="0.05" buttonStepSize="0.5" initial="0"/>
                     <panel id="velText" height="30%" width="100%" align="left" childLayout="horizontal" visibleToMouse="true">
                         <control id="inputTmscl" name="textfield" width="60%" align="left" height="100%" text="0"/>

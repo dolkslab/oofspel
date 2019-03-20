@@ -33,15 +33,16 @@ public class Interface extends SimpleApplication {
     private float azimuth = FastMath.HALF_PI, pitch=2, r=Mainstate.scale*Mainstate.AU*4;
     public Vector3f cam_coord = new Vector3f();
     public boolean cam_enabled = false;
-    public boolean update_target = true;
     public Vector2f mouse_pos, last_mouse_pos = new Vector2f(0, 0);
     public Vector3f target_coord = new Vector3f(0, 0, 0);
     private float nearest_to_target;
     public Body selected_target;
-    public Slider[] sliders = new Slider[2];
-    public TextField[] text_fields = new TextField[2];
+    public Slider[] sliders = new Slider[3];
+    public TextField[] text_fields = new TextField[3];
     public Label label_target_name;
-    public boolean gui_hidden = true;
+    public boolean gui_hidden = false;
+    public float time_per_second = 10*24*3600;
+    
     
 
     @Override
@@ -190,11 +191,12 @@ public class Interface extends SimpleApplication {
     }
     
     public void update_target_values(){
-        selected_target.mass += (selected_target.mass/500)*sliders[0].getValue();
-        selected_target.v = selected_target.v.add(selected_target.v.mult(sliders[1].getValue()/500)); 
+        selected_target.mass += (selected_target.mass/100)*sliders[0].getValue();
+        selected_target.v = selected_target.v.add(selected_target.v.mult(sliders[1].getValue()/500));
+        time_per_second += (time_per_second/50)*sliders[2].getValue();
         text_fields[0].setText(Float.toString(selected_target.mass));
         text_fields[1].setText(Float.toString(selected_target.v.length()));
-        update_target = false;
+        text_fields[2].setText(Float.toString(time_per_second/(24*3600)));
     }
     
     public void hide() {
