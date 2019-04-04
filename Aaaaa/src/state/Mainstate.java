@@ -19,12 +19,12 @@ import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
-import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Sphere;
+import com.jme3.util.SkyFactory;
 import com.jme3.util.TangentBinormalGenerator;
 import de.lessvoid.nifty.controls.Slider;
 /**
@@ -46,7 +46,7 @@ public class Mainstate extends AbstractAppState {
     public static Body bodies[] = new Body[4];
     public Vector3f total_f;
     public static final float AU = 149.6f * FastMath.pow(10, 9);
-    public static final float scale = 40/AU;
+    public static final float scale = 400/AU;
     public float time_step;
 
     
@@ -69,7 +69,7 @@ public class Mainstate extends AbstractAppState {
         
         root_node.attachChild(local_root_node);
 
-        Sphere sun_mesh = new Sphere(32,32, 5f);
+        Sphere sun_mesh = new Sphere(32,32, 1f);
         Geometry sun_geo = new Geometry("Sun", sun_mesh);
         sun_mesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
         TangentBinormalGenerator.generate(sun_mesh);           // for lighting effect
@@ -79,21 +79,19 @@ public class Mainstate extends AbstractAppState {
         sun_mat.setColor("Specular",ColorRGBA.White);
         sun_mat.setFloat("Shininess", 64f);  // [0,128]
         sun_mat.setColor("GlowColor", new ColorRGBA(1, 1, 1, 1));
+        sun_geo.setLocalScale(5);
        
         sun_geo.setMaterial(sun_mat);
         local_root_node.attachChild(sun_geo);
 
         PointLight light = new PointLight();
         light.setPosition(new Vector3f(0, 0 ,0));
-        light.setRadius(100f);
-        light.setColor(ColorRGBA.White.mult(2.5f));
+        light.setRadius(10000f);
+        light.setColor(ColorRGBA.White.mult(3.5f));
         local_root_node.addLight(light);
         
-        AmbientLight al = new AmbientLight();
-        al.setColor(ColorRGBA.White.mult(10.3f));
-        local_root_node.addLight(al);
 
-        Sphere earth_mesh = new Sphere(32,32, 1f);
+        Sphere earth_mesh = new Sphere(16,16, 1f);
         Geometry earth_geo = new Geometry("Earth", earth_mesh);
         earth_mesh.setTextureMode(Sphere.TextureMode.Projected); // better quality on spheres
         TangentBinormalGenerator.generate(earth_mesh);           // for lighting effect
@@ -106,26 +104,28 @@ public class Mainstate extends AbstractAppState {
         local_root_node.attachChild(earth_geo);
         earth_geo.setLocalTranslation(3, 0, 0);
         
-        Sphere venus_mesh = new Sphere(32, 32, 0.7f);
+        Sphere venus_mesh = new Sphere(16, 16, 0.7f);
         Geometry venus_geo = new Geometry("Venus", venus_mesh);
         venus_mesh.setTextureMode(Sphere.TextureMode.Projected);
         TangentBinormalGenerator.generate(venus_mesh);
         venus_geo.setMaterial(sun_mat);
         local_root_node.attachChild(venus_geo);
         
-        Sphere mars_mesh = new Sphere(32, 32, 0.3f);
+        Sphere mars_mesh = new Sphere(16, 16, 0.3f);
         Geometry mars_geo = new Geometry("Mars", mars_mesh);
         mars_mesh.setTextureMode(Sphere.TextureMode.Projected);
         TangentBinormalGenerator.generate(mars_mesh);
         mars_geo.setMaterial(sun_mat);
         local_root_node.attachChild(mars_geo);
         
-        Sphere test_mesh = new Sphere (32, 32, 0.2f);
+        Sphere test_mesh = new Sphere (16, 16, 0.2f);
         Geometry test_geo = new Geometry("Test", test_mesh);
 
         Material unshaded_mat = new Material(asset_manager, "Common/MatDefs/Misc/Unshaded.j3md");
         unshaded_mat.setColor("Color", ColorRGBA.Blue);
         test_geo.setMaterial(unshaded_mat);
+        
+        local_root_node.attachChild(SkyFactory.createSky(asset_manager, "Textures/spacemap.dds", SkyFactory.EnvMapType.CubeMap));
         
         local_root_node.attachChild(test_geo);
         
@@ -189,8 +189,7 @@ public class Mainstate extends AbstractAppState {
     
     
     
-    
-    ;
+
       
     
     @Override
@@ -200,15 +199,11 @@ public class Mainstate extends AbstractAppState {
         super.cleanup();
     }
     
-    public static void print(){
-        System.out.println("is this working");
-    }
     
     @Override
     public void update(float tpf) {
         Spatial test_spatial = local_root_node.getChild("Test");
-            test_spatial.setLocalScale(app.r/100);
-            System.out.println(app.r);
+            test_spatial.setLocalScale(app.r/10);
             
         if(app.update_enabled){
             time_step = app.time_per_second*tpf;

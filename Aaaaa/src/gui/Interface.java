@@ -14,6 +14,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.niftygui.NiftyJmeDisplay;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
+import com.jme3.scene.Spatial;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.controls.Label;
 import de.lessvoid.nifty.controls.Slider;
@@ -31,7 +32,7 @@ public class Interface extends SimpleApplication {
     
     public Nifty nifty;
     public float azimuth = FastMath.HALF_PI;
-    public float pitch=2, r=Mainstate.scale*Mainstate.AU*4;
+    public float pitch=2, r=Math.min(Mainstate.scale*Mainstate.AU*4, 100);
     public Vector3f cam_coord = new Vector3f();
     public boolean cam_enabled = false;
     public Vector2f mouse_pos, last_mouse_pos = new Vector2f(0, 0);
@@ -74,6 +75,8 @@ public class Interface extends SimpleApplication {
         BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
         fpp.addFilter(bloom);
         viewPort.addProcessor(fpp);
+        cam.setFrustumFar(5000);
+        cam.onFrameChange();
         
         inputManager.addMapping("wheelUp", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true));
         inputManager.addMapping("wheelDown", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false));
@@ -88,7 +91,8 @@ public class Interface extends SimpleApplication {
             }
         });
         Logger.getLogger("").setLevel(Level.SEVERE);
-        update_enabled=true;
+        System.out.println("1");
+        //update_enabled=true;
         
         
     }
@@ -158,7 +162,11 @@ public class Interface extends SimpleApplication {
 
     
     public Vector3f update_cam_distance(float zoom){
-        r+=zoom*(cam_coord.distance(target_coord)-1)*0.05;
+        Spatial target_body = rootNode.getChild(selected_target.name);
+        System.out.println(target_body.getLocalScale());
+        r+=zoom*cam_coord.distance(target_coord)*0.05;
+       // if (cam_coord.distance(target_coord)<= target_body.getLocalScale().x)
+            //r -= zoom*(cam_coord.distance(target_coord))*0.15;
         FastMath.cartesianToSpherical(cam_coord, new Vector3f(r, azimuth, pitch));
         FastMath.sphericalToCartesian(new Vector3f(r, azimuth, pitch), cam_coord);
         return cam_coord;
