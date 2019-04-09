@@ -1,0 +1,9 @@
+Material Earth : Common/MatDefs/Light/Lighting.j3md {
+     MaterialParameters {
+        LightMap : Flip Textures/8k_earth_daymap.jpg
+        SpecularMap : Flip Textures/8k_earth_specular_map.jpg
+        NormalMap : Flip Textures/8k_earth_normal_map.jpg
+     }
+    AdditionalRenderState {
+    }
+}

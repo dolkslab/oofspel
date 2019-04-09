@@ -1,0 +1,10 @@
+Material Sun : Common/MatDefs/Light/Lighting.j3md {
+     MaterialParameters {
+        
+        
+        LightMap : Textures/8k_sun.jpg
+        GlowMap : Textures/8k_sun.jpg
+     }
+    AdditionalRenderState {
+    }
+}
