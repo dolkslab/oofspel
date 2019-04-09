@@ -1,4 +1,4 @@
-package gui;
+    package gui;
 
 import com.jme3.app.SimpleApplication;
 
@@ -14,6 +14,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.niftygui.NiftyJmeDisplay;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
+import com.jme3.renderer.Camera;
 import com.jme3.scene.Spatial;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.controls.Label;
@@ -31,8 +32,7 @@ import state.Body;
 public class Interface extends SimpleApplication {
     
     public Nifty nifty;
-    public float azimuth = FastMath.HALF_PI;
-    public float pitch=2, r=Math.min(Mainstate.scale*Mainstate.AU*4, 100);
+    public float azimuth = FastMath.HALF_PI, pitch=2f, zoom=Math.min(Mainstate.scale*Mainstate.AU*10, 100), time_per_second = 10*24*3600, zoom_v = 0, zoom_a = 0;
     public Vector3f cam_coord = new Vector3f();
     public boolean cam_enabled = false;
     public Vector2f mouse_pos, last_mouse_pos = new Vector2f(0, 0);
@@ -43,14 +43,13 @@ public class Interface extends SimpleApplication {
     public TextField[] text_fields = new TextField[3];
     public Label label_target_name;
     public boolean gui_hidden = false;
-    public float time_per_second = 10*24*3600;
     public boolean update_enabled = false;
     
     
 
     @Override
     public void simpleInitApp() {    
-        System.out.println(r);
+        System.out.println(zoom);
         
         NiftyJmeDisplay niftyDisplay = new NiftyJmeDisplay(assetManager,
                 inputManager,
@@ -75,7 +74,11 @@ public class Interface extends SimpleApplication {
         BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
         fpp.addFilter(bloom);
         viewPort.addProcessor(fpp);
-        cam.setFrustumFar(5000);
+        cam.setFrustumFar(10000);
+        cam.setFrustumNear(0.9f);
+        cam.setFrustumPerspective(70, (16f/9f), 0.9f, 10000f);
+        
+        
         cam.onFrameChange();
         
         inputManager.addMapping("wheelUp", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true));
@@ -91,7 +94,6 @@ public class Interface extends SimpleApplication {
             }
         });
         Logger.getLogger("").setLevel(Level.SEVERE);
-        System.out.println("1");
         //update_enabled=true;
         
         
@@ -149,11 +151,12 @@ public class Interface extends SimpleApplication {
     private final AnalogListener analogListener = new AnalogListener() {
         @Override
         public void onAnalog(String name, float value, float tpf) {
+            Spatial target_body_spatial = rootNode.getChild(selected_target.name);
             if(name.equals("wheelUp")){
-                update_cam_distance(value);
+                zoom_v += FastMath.sqrt((zoom-((target_body_spatial.getLocalScale().x*10)+cam.getFrustumNear()))+1);
             }
             else if(name.equals("wheelDown")){
-                update_cam_distance(-value);
+                zoom_v -= FastMath.sqrt((zoom-((target_body_spatial.getLocalScale().x*10)+cam.getFrustumNear()))+1);
                 
             }
         }
@@ -161,15 +164,25 @@ public class Interface extends SimpleApplication {
     
 
     
-    public Vector3f update_cam_distance(float zoom){
-        Spatial target_body = rootNode.getChild(selected_target.name);
-        System.out.println(target_body.getLocalScale());
-        r+=zoom*cam_coord.distance(target_coord)*0.05;
-       // if (cam_coord.distance(target_coord)<= target_body.getLocalScale().x)
-            //r -= zoom*(cam_coord.distance(target_coord))*0.15;
-        FastMath.cartesianToSpherical(cam_coord, new Vector3f(r, azimuth, pitch));
-        FastMath.sphericalToCartesian(new Vector3f(r, azimuth, pitch), cam_coord);
-        return cam_coord;
+    public void update_zoom(float tpf){
+        Spatial target_body_spatial = rootNode.getChild(selected_target.name);
+        
+        zoom_a = -2f*zoom_v;
+        zoom_v += zoom_a*tpf;
+        if(FastMath.abs(zoom_v) < 1)
+            zoom_v=0;
+        if((target_body_spatial.getLocalScale().x*10)+cam.getFrustumNear()<=zoom)
+            zoom += zoom_v*tpf;
+        else{
+            zoom_v = zoom_a = 0;
+            zoom = (target_body_spatial.getLocalScale().x*10)+cam.getFrustumNear();
+            
+        }
+            
+        //System.out.println(zoom_v + " " + zoom + " " + FastMath.sqrt((zoom-((target_body_spatial.getLocalScale().x*10)+cam.getFrustumNear()))+1));
+        FastMath.cartesianToSpherical(cam_coord, new Vector3f(zoom, azimuth, pitch));
+        FastMath.sphericalToCartesian(new Vector3f(zoom, azimuth, pitch), cam_coord);
+        
     }
     
     public Vector3f update_cam_pos(){
@@ -180,13 +193,13 @@ public class Interface extends SimpleApplication {
         pitch -= (mouse_pos.y-last_mouse_pos.y)/100;
         
         if(pitch > FastMath.HALF_PI){
-            pitch = FastMath.HALF_PI-0.00001f;
+            pitch = FastMath.HALF_PI-0.001f;
         }
         else if(pitch < -1*FastMath.HALF_PI){
-            pitch = -FastMath.HALF_PI+0.00001f;
+            pitch = -FastMath.HALF_PI+0.001f;
         }
         
-        FastMath.sphericalToCartesian(new Vector3f(r, azimuth ,pitch), cam_coord);
+        FastMath.sphericalToCartesian(new Vector3f(zoom, azimuth ,pitch), cam_coord);
        
         last_mouse_pos=new Vector2f(mouse_pos.getX(), mouse_pos.getY());
         
@@ -194,8 +207,7 @@ public class Interface extends SimpleApplication {
     }
     
     public void update_cam(){
-        
-        
+
         cam.setLocation(cam_coord.add(target_coord));
         cam.lookAt(target_coord, new Vector3f(0, 1 ,0));
         
