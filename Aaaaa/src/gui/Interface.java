@@ -14,7 +14,6 @@ import com.jme3.math.Vector3f;
 import com.jme3.niftygui.NiftyJmeDisplay;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
-import com.jme3.renderer.Camera;
 import com.jme3.scene.Spatial;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.controls.Label;
@@ -100,7 +99,7 @@ public class Interface extends SimpleApplication {
     }
     
     
-    
+    //Deze functie is voor het selecteren van een hemmellichaam, de "selected_target".
     private final ActionListener LMB = new ActionListener(){
         @Override
         public void onAction(String name, boolean keyPressed, float tpf){
@@ -109,11 +108,14 @@ public class Interface extends SimpleApplication {
                 
                 nearest_to_target=3000;
                 
+                //Deze loop kijkt welk lichaam het dichtste bij de muis is.
                 for(Body body:Mainstate.bodies){
+                    //Eerst worden de 3d coördinaten geprojecteerd op op het scherm om zo 2d coördinaten te krijgen.
                     Vector2f screenPos = new Vector2f(cam.getScreenCoordinates(body.p.mult(Mainstate.scale)).x,
                                                       cam.getScreenCoordinates(body.p.mult(Mainstate.scale)).y);
                     float mouseDistance = screenPos.distance(mouse_pos);
                     
+                    //Elke keer als iets dichterbij dan alle andere lichamen wordt het opgeslachen in een variabele.
                     if(mouseDistance < nearest_to_target && mouseDistance < 50){
                         selected_target=body;
                         nearest_to_target=mouseDistance;
@@ -122,6 +124,7 @@ public class Interface extends SimpleApplication {
                     } 
                     
                 }
+                //Als het lichaam dichtbij genoeg is is het de nieuwe selected_target.
                 if(nearest_to_target != 3000){
                 target_coord=rootNode.getChild(selected_target.name).getLocalTranslation();
                 update_cam();
@@ -132,6 +135,7 @@ public class Interface extends SimpleApplication {
         };
     
     
+    //De camera moet aleen bewogen worden als de rechtermuisknop ingedrukt is. Hier wordt dat gechecked.
     private final ActionListener RMB = new ActionListener(){
         @Override
         public void onAction(String name, boolean keyPressed, float tpf){
@@ -147,7 +151,8 @@ public class Interface extends SimpleApplication {
         }
     };
     
-   
+    
+    //De AnalogListener detecteert als je scrollt en geeft dan welke richting je scrollt.
     private final AnalogListener analogListener = new AnalogListener() {
         @Override
         public void onAnalog(String name, float value, float tpf) {
@@ -162,15 +167,47 @@ public class Interface extends SimpleApplication {
         }
     };
     
+    //Deze functie wordt aangeroepen als je de rechtermuisknop ingedrukt houdt. De functie zet de XY beweging van de muis om in XYZ coördinaten voor de camera.
+    //De camera werkt als "orbital camera" wat betekent dat een object omcirkelt. De beweging is dus opgebouwt uit drie variabelen: de afstand tot het object(zoom),
+    //de rotatie op en neer(pitch) en van rechts naar links(azimuth).
+    public Vector3f update_cam_pos(){
+ 
+        mouse_pos=inputManager.getCursorPosition();
+        
+        //De XY beweging van muis wordt hier omgezet in pitch en azimuth.
+        azimuth += (mouse_pos.x-last_mouse_pos.x)/100;
+        pitch -= (mouse_pos.y-last_mouse_pos.y)/100;
+        
+        //Hier wordt gezorgd dat de pitch niet verder dan recht omhoog of recht omlaag gaat.
+        if(pitch > FastMath.HALF_PI){
+            pitch = FastMath.HALF_PI-0.001f;
+        }
+        else if(pitch < -1*FastMath.HALF_PI){
+            pitch = -FastMath.HALF_PI+0.001f;
+        }
+        
+        //De positie die nu voor de camera opgebouwd is(zoom, azimuth, pitch) wordt ook wel een spherische coördinaat genoemd.
+        //Die wordt hier omgezet naar een XYZ coördinaat.
+        FastMath.sphericalToCartesian(new Vector3f(zoom, azimuth ,pitch), cam_coord);
+       
+        last_mouse_pos=new Vector2f(mouse_pos.getX(), mouse_pos.getY());
+        
+        return cam_coord;
+    }
 
-    
+    //Deze functie regelt de zoom. Hij wordt aangeroepen als je scrollt.
     public void update_zoom(float tpf){
         Spatial target_body_spatial = rootNode.getChild(selected_target.name);
         
+        //Om de zoom effen te maken wordt de zoomafstand niet direct bepaald door het scrollwiel, maar via een snelheid. Deze snelheid wordt groter of kleiner op basis
+        //van het scrollwiel. De zoomsnelheid wordt ook afgremend door een ingestelde afremmingsfactor.
         zoom_a = -2f*zoom_v;
         zoom_v += zoom_a*tpf;
+        //Als de snelheid kleiner is dan 1 wordt de snelheid op 0 gezet.
         if(FastMath.abs(zoom_v) < 1)
             zoom_v=0;
+        
+        //We willen niet dat je verder dan het oppervlak van een object kan zoomen. Als dat wordt geprobeert wordt dat hier geblokkeerd.
         if((target_body_spatial.getLocalScale().x*10)+cam.getFrustumNear()<=zoom)
             zoom += zoom_v*tpf;
         else{
@@ -179,32 +216,13 @@ public class Interface extends SimpleApplication {
             
         }
             
-        //System.out.println(zoom_v + " " + zoom + " " + FastMath.sqrt((zoom-((target_body_spatial.getLocalScale().x*10)+cam.getFrustumNear()))+1));
+        
         FastMath.cartesianToSpherical(cam_coord, new Vector3f(zoom, azimuth, pitch));
         FastMath.sphericalToCartesian(new Vector3f(zoom, azimuth, pitch), cam_coord);
         
     }
     
-    public Vector3f update_cam_pos(){
-        
-        mouse_pos=inputManager.getCursorPosition();
-        
-        azimuth += (mouse_pos.x-last_mouse_pos.x)/100;
-        pitch -= (mouse_pos.y-last_mouse_pos.y)/100;
-        
-        if(pitch > FastMath.HALF_PI){
-            pitch = FastMath.HALF_PI-0.001f;
-        }
-        else if(pitch < -1*FastMath.HALF_PI){
-            pitch = -FastMath.HALF_PI+0.001f;
-        }
-        
-        FastMath.sphericalToCartesian(new Vector3f(zoom, azimuth ,pitch), cam_coord);
-       
-        last_mouse_pos=new Vector2f(mouse_pos.getX(), mouse_pos.getY());
-        
-        return cam_coord;
-    }
+
     
     public void update_cam(){
 
